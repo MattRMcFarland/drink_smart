@@ -18,6 +18,6 @@ Usage : `json_to_csv.py` `[JSON FILE TO CONVERT]`
 
 Pretty simple little script to turn the JSON dictionary occurences produced from the `merge_json.py` script into csv files digestible by Matlab.
 
-### profile.m
+### `profile.m`
 
 Reads csv files of beer and reviewer occurences (ie, how many reviews are attributed to a single reviewer or beer respectviely) and plots the cumulative sum. This is handy for understanding where the bulk of the data lies and what threshold for reviews we can responsibly apply when selecting the data we will actually process.
