@@ -9,7 +9,7 @@ import os.path
 # 0			 1 				2			3				4			5					6				7			8				9			10 		11		12
 # brewery_id,brewery_name,review_time,review_overall,review_aroma,review_appearance,review_profilename,beer_style,review_palate,review_taste,beer_name,beer_abv,beer_beerid
 
-json_dir = './json/'
+json_dir = './data/'
 brewery_dir = json_dir + 'breweries/'
 beers_dir = json_dir + 'beers/'
 reviewers_dir = json_dir + 'reviewers/'
@@ -38,9 +38,9 @@ def read_file(filename):
 				print 'line ' + str(j) + ' of file ' + filename
 
 			data = line.strip().split(',')
-			increment_key(brewery_name, data[1]) 	# count brewery occurence
+			increment_key(brewery_name, data[0]) 	# count brewery occurence
 			increment_key(reviewers, data[6]) 		# count reviewers occurence
-			increment_key(beers, data[10])			# count beers occurence	
+			increment_key(beers, data[12])			# count beers occurence	
 
 		with open(brewery_dir + suffix + '_brewery_names.json', 'w') as fp:
 			json.dump(brewery_name, fp)

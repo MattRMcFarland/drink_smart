@@ -1,3 +1,6 @@
 .DS_Store
+data/split_files/*
+new file:   data/split_files/beer_reviews_small*
 
+*~
 # ignore actual data files
