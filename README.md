@@ -12,3 +12,12 @@ This script expects a series of `.csv` data files and will build dictionaries wi
 Usage : `merge_json.py` `[OUTPUT FILE NAME]` `[JSON DICTIONARIES TO MERGE]`
 
 Because putting all of our observations into one dictionary would require an enormous amount of memory and time, we split up the source file into components and then build a dictionary for each subfile. We need to combine all these dictionaries. This file will merge the dictionaries, summing observation counts for each each. (Combined outputs are currently in the `./data/combined_json` directory.)
+
+### `json_to_csv.py`
+Usage : `json_to_csv.py` `[JSON FILE TO CONVERT]`
+
+Pretty simple little script to turn the JSON dictionary occurences produced from the `merge_json.py` script into csv files digestible by Matlab.
+
+### profile.m
+
+Reads csv files of beer and reviewer occurences (ie, how many reviews are attributed to a single reviewer or beer respectviely) and plots the cumulative sum. This is handy for understanding where the bulk of the data lies and what threshold for reviews we can responsibly apply when selecting the data we will actually process.
