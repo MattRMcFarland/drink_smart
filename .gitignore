@@ -2,5 +2,6 @@
 data/split_files/*
 new file:   data/split_files/beer_reviews_small*
 
+beer_reviews.csv
 *~
 # ignore actual data files
