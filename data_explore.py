@@ -1,3 +1,5 @@
+
+
 import pandas as pd
 import copy
 import operator
@@ -21,7 +23,7 @@ pd.set_option("display.width", 1000)
 
 class DrinkSmart:
 
-    def __init__(self, limit_reviews=1000):
+    def __init__(self, limit_reviews):
         print("Reading in reviews...")
         self.reviews = pd.read_csv(INPUT_CSV)[0:limit_reviews]
         self.reload_beers_and_reviewers()
@@ -78,7 +80,36 @@ class DrinkSmart:
         most_common_beers = map((lambda x: x[0]), beer_frequencies[0:limit])
         return most_common_beers
 
+
+    # ---- Normalizing the Data --------------------------------------------- #
+
+    def create_normalized_column(self):
+        # add a new column 'normalized overall review'
+        self.reviews['normalized_overall_reviews']
+        # fill with normalized reviews
+        normalized_reviews = self.normalize_user_ratings("review_overall")
+        # for each user key in normalized_reviews, add to newly created column
+
+
+    def normalize_user_ratings(self, column):
+        normalized_reviews = {}
+        users = self.reviews["review_profilename"].unique().tolist()
+        
+        # for each user, get average and stdev of overall ratings
+        for user in users:
+            user_reviews = self.select_reviews_by_reviewer(user)
+            avg = mean(user_reviews["review_overall"])
+            stdev = stdev(user_reviews["review_overall"])
+            normalized_reviews[user] = (user_reviews - avg) / stdev
+
+        return normalized_reviews
+
+
+    def set_favored_beers(self, column, threshold):
+        self.reviews["favored"] = self.reviews[""]
+
     # ---- Outputing Results ------------------------------------------------ #
+
     def get_similarity_matrix(self, labeled=True):
         similarity_matrix = copy.deepcopy(self.similarities)
 
@@ -101,6 +132,7 @@ class DrinkSmart:
             writer = csv.writer(csvfile, delimiter=",")
             for row in similarity_matrix:
                 writer.writerow(row)
+
     # ---- Item Matrix Generation ------------------------------------------- #
 
     def build_beer_matrix(self):
@@ -169,9 +201,9 @@ class DrinkSmart:
 
 if __name__ == "__main__":
     ds = DrinkSmart(limit_reviews=10000)
-    ds.filter_by_most_common_beers(limit=100)
-    ds.calculate_summary_statistics()
-    ds.build_beer_matrix()
-    ds.save_similarity_matrix(labeled=True)
+    #ds.filter_by_most_common_beers(limit=100)
+    #ds.calculate_summary_statistics()
+    #ds.build_beer_matrix()
+    #ds.save_similarity_matrix(labeled=True)
 
 # END #
