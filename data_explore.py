@@ -3,9 +3,10 @@ import copy
 import operator
 import math
 import csv
+import pdb
 
 SCORE_THRESHOLD = 3
-INPUT_CSV = "beer_reviews.csv"
+INPUT_CSV = "data/beer_reviews.csv"
 OUTPUT_SIMILARITY_MATRIX = "similarity_matrix.csv"
 
 pd.set_option("display.width", 1000)
@@ -75,6 +76,37 @@ class DrinkSmart:
     def remove_filters(self):
         self.reviews = pd.read_csv(INPUT_CSV)
         self.reload_beers_and_reviewers()
+
+    # ---- Normalization ---------------------------------------------------- #
+    def normalize_all_reviews(self):
+
+        def normalize_review(review, user_means, user_stds):
+            reviewer = review['review_profilename']
+            reviewer_mean = user_means[reviewer]
+            reviewer_std = user_stds[reviewer]
+            return (review['review_overall'] - reviewer_mean) / reviewer_std
+
+        user_means = self.get_user_rating_means()
+        user_stds = self.get_user_rating_stds()
+        self.reviews['normalized_review_overall'] = self.reviews.apply(lambda row: normalize_review(row, user_means, user_stds), axis=1)
+
+
+    def get_user_rating_means(self):
+        grouped = self.reviews['review_overall'].groupby(self.reviews['review_profilename'])
+        return grouped.mean()
+
+    def get_user_rating_stds(self):
+        grouped = self.reviews['review_overall'].groupby(self.reviews['review_profilename'])
+        return grouped.std()
+
+    # ---- Like/Dislike Binary ---------------------------------------------- #
+    def discretize_all_reviews(self, column_name, score_threshold):
+
+        def discretize_review(review, column_name, score_threshold):
+            return review[column_name] > score_threshold
+
+        new_column_name = "discretized_" + column_name
+        self.reviews[new_column_name] = self.reviews.apply(lambda row: discretize_review(row, column_name, score_threshold), axis=1)
 
     # ---- Outputing Results ------------------------------------------------ #
     def get_similarity_matrix(self, labeled=True):
@@ -172,6 +204,8 @@ if __name__ == "__main__":
     ds.filter_on_beer_reviewer_counts(150, 100)
     print("---- Filtered Datset --------- ")
     ds.calculate_summary_statistics()
+    ds.normalize_all_reviews()
+    pdb.set_trace()
 
 
 # END #
