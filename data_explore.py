@@ -9,6 +9,8 @@ INPUT_CSV = "beer_reviews.csv"
 OUTPUT_SIMILARITY_MATRIX = "similarity_matrix.csv"
 
 pd.set_option("display.width", 1000)
+pd.set_option('display.height', 500)
+pd.set_option('display.max_rows', 500)
 
 # The following python script demonstrates building an item by item matrix
 # with numpy and python. Future attempts should make greater use of numpy and
@@ -21,9 +23,9 @@ pd.set_option("display.width", 1000)
 
 class DrinkSmart:
 
-    def __init__(self, limit_reviews=1000):
+    def __init__(self):
         print("Reading in reviews...")
-        self.reviews = pd.read_csv(INPUT_CSV)[0:limit_reviews]
+        self.reviews = pd.read_csv(INPUT_CSV)
         self.reload_beers_and_reviewers()
 
     def reload_beers_and_reviewers(self):
@@ -48,35 +50,31 @@ class DrinkSmart:
         return self.reviews.loc[self.reviews["beer_name"] == beer]
 
     # ---- Limiting the Dataset --------------------------------------------- #
+    def filter_on_beer_reviewer_counts(self, beer_thresh, reviewer_thresh):
+        allowed_beers = self.get_beers_above_threshold(beer_thresh)
+        allowed_reviewers = self.get_reviewers_above_threshold(reviewer_thresh)
+
+        filtered_reviews = self.reviews[self.reviews["beer_name"].isin(allowed_beers)]
+        filtered_reviews = filtered_reviews[filtered_reviews["review_profilename"].isin(allowed_reviewers)]
+        self.reviews = filtered_reviews
+        self.reload_beers_and_reviewers()
+
+    def get_beers_above_threshold(self, threshold):
+        return self.get_entries_above_threshold('beer_name', threshold)
+
+    def get_reviewers_above_threshold(self, threshold):
+        return self.get_entries_above_threshold('review_profilename', threshold)
+
+    def get_entries_above_threshold(self, column, threshold):
+        value_counts = self.get_entry_value_counts(column)
+        return list(value_counts.loc[value_counts > threshold].index)
+
+    def get_entry_value_counts(self, column):
+        return self.reviews[column].value_counts()
 
     def remove_filters(self):
         self.reviews = pd.read_csv(INPUT_CSV)
         self.reload_beers_and_reviewers()
-
-    def filter_by_most_common_beers(self, limit=100):
-        self.reviews = self.get_reviews_of_most_common_beers(limit)
-        self.reload_beers_and_reviewers()
-
-    def get_reviews_of_most_common_beers(self, limit=100):
-        most_common_beers = self.get_most_common_beers(limit)
-        return self.reviews[self.reviews["beer_name"].isin(most_common_beers)]
-
-    def get_most_common_beers(self, limit=100):
-        beer_frequencies = []
-
-        # Count the reviews for each beer
-        for beer in self.beers:
-            reviews = self.select_reviews_by_beer(beer)
-            count = reviews["beer_name"].count()
-            beer_frequencies.append((beer, count))
-
-        # Sort by frequency from largest to smallest
-        beer_frequencies.sort(key=operator.itemgetter(1))
-        beer_frequencies.reverse()
-
-        # Limit to the count provided and provided just name, not freq
-        most_common_beers = map((lambda x: x[0]), beer_frequencies[0:limit])
-        return most_common_beers
 
     # ---- Outputing Results ------------------------------------------------ #
     def get_similarity_matrix(self, labeled=True):
@@ -168,10 +166,12 @@ class DrinkSmart:
         return prod / (len1 * len2)
 
 if __name__ == "__main__":
-    ds = DrinkSmart(limit_reviews=10000)
-    ds.filter_by_most_common_beers(limit=100)
+    ds = DrinkSmart()
+    print("---- Overall Dataset ----------")
     ds.calculate_summary_statistics()
-    ds.build_beer_matrix()
-    ds.save_similarity_matrix(labeled=True)
+    ds.filter_on_beer_reviewer_counts(150, 100)
+    print("---- Filtered Datset --------- ")
+    ds.calculate_summary_statistics()
+
 
 # END #
