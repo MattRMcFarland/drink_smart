@@ -87,19 +87,27 @@ class DrinkSmart:
         self.reviews['normalized_overall_reviews']
         # fill with normalized reviews
         normalized_reviews = self.normalize_user_ratings("review_overall")
+
+        for user in normalized_reviews.keys()
         # for each user key in normalized_reviews, add to newly created column
 
 
     def normalize_user_ratings(self, column):
         normalized_reviews = {}
         users = self.reviews["review_profilename"].unique().tolist()
-        
+        grouped_by_users = self.reviews.groupby
+
+
         # for each user, get average and stdev of overall ratings
         for user in users:
-            user_reviews = self.select_reviews_by_reviewer(user)
+            user_reviews = self.select_reviews_by_reviewer(user);
+            avg = user_reviews["review_overall"].mean()
+            stdev = user_reviews["review_overall"].std()
+            user_reviews["normized_review_overall"] = user_reviews["review_overall"].apply(lambda x: (x - avg) / stdev)
+
             avg = mean(user_reviews["review_overall"])
             stdev = stdev(user_reviews["review_overall"])
-            normalized_reviews[user] = (user_reviews - avg) / stdev
+            normalized_reviews[user] = (user_reviews[""] - avg) / stdev
 
         return normalized_reviews
 
