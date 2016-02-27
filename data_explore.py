@@ -99,6 +99,19 @@ class DrinkSmart:
         grouped = self.reviews['review_overall'].groupby(self.reviews['review_profilename'])
         return grouped.std()
 
+    # ---- Review Accumulation ---------------------------------------------- #
+    def build_similarity_matrix(self, distance_column='normalized_review_overall'):
+        collected_reviews = self.reviews.pivot_table(
+            index='review_profilename',
+            columns='beer_name',
+            values=distance_column,
+            aggfunc='mean'
+        )
+
+        similarity_matrix = collected_reviews.corr(method='pearson')
+        similarity_matrix.to_csv(OUTPUT_SIMILARITY_MATRIX)
+        return similarity_matrix
+
     # ---- Like/Dislike Binary ---------------------------------------------- #
     def discretize_all_reviews(self, column_name, score_threshold):
 
@@ -204,8 +217,10 @@ if __name__ == "__main__":
     ds.filter_on_beer_reviewer_counts(150, 100)
     print("---- Filtered Datset --------- ")
     ds.calculate_summary_statistics()
+    print("Normalizing all reviews...")
     ds.normalize_all_reviews()
-    pdb.set_trace()
-
+    print("Building beer-by-beer similarity matrix...")
+    ds.build_similarity_matrix()
+    print("Similarity matrix written to: " + OUTPUT_SIMILARITY_MATRIX)
 
 # END #
