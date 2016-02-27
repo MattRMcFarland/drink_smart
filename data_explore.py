@@ -5,9 +5,10 @@ import copy
 import operator
 import math
 import csv
+import pdb
 
 SCORE_THRESHOLD = 3
-INPUT_CSV = "beer_reviews.csv"
+INPUT_CSV = "data/beer_reviews.csv"
 OUTPUT_SIMILARITY_MATRIX = "similarity_matrix.csv"
 
 pd.set_option("display.width", 1000)
@@ -79,41 +80,36 @@ class DrinkSmart:
         self.reviews = pd.read_csv(INPUT_CSV)
         self.reload_beers_and_reviewers()
 
+    # ---- Normalization ---------------------------------------------------- #
+    def normalize_all_reviews(self):
 
-    # ---- Normalizing the Data --------------------------------------------- #
+        def normalize_review(review, user_means, user_stds):
+            reviewer = review['review_profilename']
+            reviewer_mean = user_means[reviewer]
+            reviewer_std = user_stds[reviewer]
+            return (review['review_overall'] - reviewer_mean) / reviewer_std
 
-    def create_normalized_column(self):
-        # add a new column 'normalized overall review'
-        self.reviews['normalized_overall_reviews']
-        # fill with normalized reviews
-        normalized_reviews = self.normalize_user_ratings("review_overall")
-
-        for user in normalized_reviews.keys()
-        # for each user key in normalized_reviews, add to newly created column
-
-
-    def normalize_user_ratings(self, column):
-        normalized_reviews = {}
-        users = self.reviews["review_profilename"].unique().tolist()
-        grouped_by_users = self.reviews.groupby
+        user_means = self.get_user_rating_means()
+        user_stds = self.get_user_rating_stds()
+        self.reviews['normalized_review_overall'] = self.reviews.apply(lambda row: normalize_review(row, user_means, user_stds), axis=1)
 
 
-        # for each user, get average and stdev of overall ratings
-        for user in users:
-            user_reviews = self.select_reviews_by_reviewer(user);
-            avg = user_reviews["review_overall"].mean()
-            stdev = user_reviews["review_overall"].std()
-            user_reviews["normized_review_overall"] = user_reviews["review_overall"].apply(lambda x: (x - avg) / stdev)
+    def get_user_rating_means(self):
+        grouped = self.reviews['review_overall'].groupby(self.reviews['review_profilename'])
+        return grouped.mean()
 
-            avg = mean(user_reviews["review_overall"])
-            stdev = stdev(user_reviews["review_overall"])
-            normalized_reviews[user] = (user_reviews[""] - avg) / stdev
+    def get_user_rating_stds(self):
+        grouped = self.reviews['review_overall'].groupby(self.reviews['review_profilename'])
+        return grouped.std()
 
-        return normalized_reviews
+    # ---- Like/Dislike Binary ---------------------------------------------- #
+    def discretize_all_reviews(self, column_name, score_threshold):
 
+        def discretize_review(review, column_name, score_threshold):
+            return review[column_name] > score_threshold
 
-    def set_favored_beers(self, column, threshold):
-        self.reviews["favored"] = self.reviews[""]
+        new_column_name = "discretized_" + column_name
+        self.reviews[new_column_name] = self.reviews.apply(lambda row: discretize_review(row, column_name, score_threshold), axis=1)
 
     # ---- Outputing Results ------------------------------------------------ #
 
@@ -213,5 +209,7 @@ if __name__ == "__main__":
     ds.filter_on_beer_reviewer_counts(150, 100)
     print("---- Filtered Datset --------- ")
     ds.calculate_summary_statistics()
+    ds.normalize_all_reviews()
+    pdb.set_trace()
 
 # END #
