@@ -6,7 +6,6 @@ OUTPUT_SIMILARITY_MATRIX = "similarity_matrix.csv"
 OUTPUT_BEER_NAME_ID_LOOKUP = "beer_name_id_lookup.csv"
 
 pd.set_option("display.width", 1000)
-pd.set_option('display.height', 500)
 pd.set_option('display.max_rows', 500)
 
 
@@ -121,7 +120,7 @@ class DrinkSmart:
 
         collected_reviews = self.reviews.pivot_table(
             index='review_profilename',
-            columns='beer_beerid',
+            columns='beer_name',
             values=distance_column,
             aggfunc='mean'
         )
