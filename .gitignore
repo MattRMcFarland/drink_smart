@@ -6,6 +6,8 @@ code/*
 
 similarity_matrix.csv
 
+*.mat
+*.csv
 beer_reviews.csv
 *~
 # ignore actual data files
