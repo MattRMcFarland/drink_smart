@@ -175,7 +175,7 @@ if __name__ == "__main__":
     ds = DrinkSmart()
     print("---- Overall Dataset ----------")
     ds.calculate_summary_statistics()
-    ds.filter_on_beer_reviewer_counts(800, 100)
+    ds.filter_on_beer_reviewer_counts(200, 40)
     print("---- Filtered Datset --------- ")
     ds.calculate_summary_statistics()
     #print("Normalizing all reviews...")

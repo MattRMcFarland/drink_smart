@@ -1,9 +1,9 @@
-function [mse, svd] = svd_train(X, svd_in, params)
+function [mse, svd] = svd_train_from_start_point(X, svd_in, params)
 %% Uses gradient descent to find optimal U and V for SVD
 % INPUTS:
 %   X - n x d
-%   svd.U - n x k
-%   svd.V - d x k
+%   grad_0.U - n x k
+%   grad_0.V - d x k
 %   params.batch_size - 1x1
 %   params.stepsize - 1x1
 %   params.max_iterations = 1x1
@@ -17,8 +17,8 @@ k = size(svd_in.V,2);
 d = size(X,2);
 n = size(X,1);
 
-svd = svd_in;
-%[~, svd] = svd_error(X, grad_0);
+%svd = svd_in;
+[~, svd] = svd_error(X, svd_in);
 mse = [];
 for iter = 1:params.max_iterations  
     
@@ -30,10 +30,11 @@ for iter = 1:params.max_iterations
         svd_batch.U = svd.U(batch,:);
         svd_batch.V = svd.V;
         
-        % update U and V
-        [~, grad] = svd_error(Xbatch,svd_batch);
+        % update U
+        [~, grad] = svd_error(Xbatch, svd_batch);
         svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
     end
+    % update V
     [~,grad] = svd_error(X,svd);
     svd.V = svd.V - (params.step_size) * grad.V;      
     
