@@ -1,4 +1,4 @@
-function [mse, grad] = svd_train(X, grad_0, params)
+function [mse, svd] = svd_train(X, grad_0, params)
 %% Uses gradient descent to find optimal U and V for SVD
 % INPUTS:
 %   X - n x d
@@ -34,19 +34,23 @@ for iter = 1:params.max_iterations
         [~, grad] = svd_error(Xbatch,svd_batch);
         svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
     end
-    svd.V = svd.V - (params.step_size / params.batch_size) * grad.V;      
+    svd.V = svd.V - (params.step_size) * grad.V;      
     
     % decrease the step size -- remove
     % params.step_size = params.step_size / iter  
+%     if iter == 200
+%         params.step_size = params.step_size * 10;
+%         fprintf('increasing step size to %f\n',params.step_size)
+%     end
     
     % keep track of the MSE across iterations
     mse = [mse, svd_error(X,svd)];      
-    fprintf('svd_train: iter %d, mse %.4G\n', iter, mse(end));
+    fprintf('svd_train: iter %d, mse %.4f\n', iter, mse(end));
        
     % threshold = 1e-3;
     % stopping criterion
     if (length(mse) > 1 && max(abs(mse(end) - mse(end-1))) < params.threshold) || ...
-            (length(mse) > 1 && (mse(end) - mse(end-1) > params.threshold))
+            (length(mse) > 1 && (mse(end) - mse(end-1) > 0))
         fprintf('svd_train: reached stopping threshold at iteration %d for with MSE %.4G\n',...
             iter,mse(end))
         break;
@@ -55,5 +59,6 @@ for iter = 1:params.max_iterations
 end
 fprintf('stopping now.\nIterations: %d\nMagnitude of svd.U: %f\nMagnitude of svd.V: %d\n',...
     iter, norm(svd.U), norm(svd.V));
+
 return;
 end

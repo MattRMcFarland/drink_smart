@@ -1,15 +1,19 @@
 
 
 import pandas as pd
+import pdb
 
+
+# ---- CONSTANTS ------------------------------------------------------------ #
+TRAINING_SPLIT_DEFAULT = .2
 SCORE_THRESHOLD = 3
+
+# ---- FILE NAMES ----------------------------------------------------------- #
 INPUT_CSV = "data/beer_reviews.csv"
 OUTPUT_SIMILARITY_MATRIX = "similarity_matrix.csv"
 COLLECTED_REVIEWS_MATRIX = "collected_reviews.csv"
 TESTING_COLLECTED_REVIEWS = "testing_reviews.csv"
-TRAINING_SPLIT_DEFAULT = .2
 OUTPUT_BEER_NAME_ID_LOOKUP = "beer_name_id_lookup.csv"
-
 
 pd.set_option("display.width", 1000)
 pd.set_option('display.max_rows', 500)
@@ -94,7 +98,8 @@ class DrinkSmart:
 
     # ---- Testing / Training sets ------------------------------------------ #
     #def split_collected_reviews(self, train_percentage):
-        # should split apart 1 - train_percentage of the collected reviews matrix for testing
+        # should split apart 1 - train_percentage of the collected reviews 
+        # matrix for testing
 
 
     # ---- Normalization ---------------------------------------------------- #
@@ -260,13 +265,13 @@ if __name__ == "__main__":
     ds = DrinkSmart()
     print("---- Overall Dataset ----------")
     ds.calculate_summary_statistics()
-    ds.filter_on_beer_reviewer_counts(1000, 200)
+    ds.filter_on_beer_reviewer_counts(800, 100)
     print("---- Filtered Datset --------- ")
     ds.calculate_summary_statistics()
-    print("Normalizing all reviews...")
-    ds.normalize_all_reviews()
+    #print("Normalizing all reviews...")
+    #ds.normalize_all_reviews()
     print("pivoting reviews to get collected reviews")
-    ds.pivot_reviews(save_to_csv=True, file_name='small_collected_reviews.csv')
+    ds.pivot_reviews(column_name='review_overall',save_to_csv=True, file_name='nonnormalized_collected_reviews.csv')
 
     #print("Building beer-by-beer similarity matrix...")
     #ds.build_similarity_matrix()

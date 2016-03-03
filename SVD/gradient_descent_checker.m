@@ -9,8 +9,13 @@ d = size(X, 2)
 K = 5
 
 small_n = 15;
-if small_n < n
-    small_n = n;
+if small_n > n
+    small_n = n
+end
+
+small_d = 10;
+if small_d > d
+    small_d = d
 end
 
 %% Checking your gradient: compare your gradient with the numerical gradient
@@ -19,16 +24,18 @@ grd = []; grd2 = [];
 for i = 1:length(perturb)
     % to make sure your gradient is correct,you can compare your gradient calculating with numerical gradient
     small_i = randperm(size(X,1), small_n);
-    small_x = X(small_i, :); 
+    small_x = X(small_i, 1:small_d); 
     %Ycheck = Ytrain(rndIdx);
 
     fun=@(th)(svd_error(small_x, th)); 
     svd.U = unifrnd( -6, 6, [small_n, K])  
-    svd.V = unifrnd( -6, 6, [d, K])
+    svd.V = unifrnd( -6, 6, [small_d, K])
     
     [mse, grad] = fun(svd); 
     grd = [grd; [grad.U(:)', grad.V(:)']];
     
+    small_x(isnan(small_x)) = 0;
+    fun=@(th)(svd_error(small_x, th));
     [du, dv] = numerical_gradient(fun, svd);  
     grd2 = [grd2; [du(:)', dv(:)']]; % evaluate the numerical gradient
     i
