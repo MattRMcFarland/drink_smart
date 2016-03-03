@@ -171,96 +171,6 @@ class DrinkSmart:
         new_column_name = "discretized_" + column_name
         self.reviews[new_column_name] = self.reviews.apply(lambda row: discretize_review(row, column_name, score_threshold), axis=1)
 
-    # ---- Outputing Results ------------------------------------------------ #
-    # def get_similarity_matrix(self, labeled=True):
-    #     similarity_matrix = copy.deepcopy(self.similarities)
-
-    #     if not labeled:
-    #         return similarity_matrix
-
-    #     for i in range(self.beer_count):
-    #         beer_name = self.beers[i]
-    #         similarity_matrix[i].insert(0, beer_name)
-
-    #     similarity_matrix.insert(0, [""] + self.beers)
-    #     return similarity_matrix
-
-    # def save_similarity_matrix(self, labeled=True):
-    #     similarity_matrix = self.get_similarity_matrix(labeled)
-    #     for row in similarity_matrix:
-    #         row = [str(element) for element in row]
-
-    #     with open(OUTPUT_SIMILARITY_MATRIX, "wb") as csvfile:
-    #         writer = csv.writer(csvfile, delimiter=",")
-    #         for row in similarity_matrix:
-    #             writer.writerow(row)
-
-
-    # ---- Item Matrix Generation ------------------------------------------- #
-    # def build_beer_matrix(self):
-    #     similarity_scores = []
-
-    #     beer_vectors = self.build_beer_vectors()
-    #     print "Building similarity matrix..."
-    #     self.similarities = [
-    #         [0] * self.beer_count for i in range(self.beer_count)
-    #     ]
-
-    #     first_beer_ind = 0
-    #     while(first_beer_ind < self.beer_count):
-    #         first_beer = beer_vectors[first_beer_ind]
-    #         second_beer_ind = first_beer_ind
-
-    #         while(second_beer_ind < self.beer_count):
-    #             second_beer = beer_vectors[second_beer_ind]
-    #             similarity = self.calc_similarity(first_beer, second_beer)
-    #             self.similarities[first_beer_ind][second_beer_ind] = similarity
-    #             similarity_scores.append(similarity)
-    #             second_beer_ind += 1
-    #         first_beer_ind += 1
-
-    # def build_beer_vectors(self):
-    #     print "Building beer-reviewer vectors..."
-
-    #     beer_vectors = []
-
-    #     # for each beer
-    #     for beer in self.beers:
-
-    #         # Initialize storage
-    #         beer_vector = [0] * self.reviewer_count
-
-    #         # Fetch reviews
-    #         reviews = self.select_reviews_by_beer(beer)
-
-    #         # for each review about said beer
-    #         for index, review in reviews.iterrows():
-
-    #             # determine the reviewer number
-    #             reviewer = review["review_profilename"]
-    #             score = review["review_overall"]
-    #             reviewer_id = self.reviewers.index(reviewer)
-
-    #             # store down either a postiive or negative score
-    #             if score > SCORE_THRESHOLD:
-    #                 beer_vector[reviewer_id] = 1
-    #             else:
-    #                 beer_vector[reviewer_id] = -1
-
-    #         beer_vectors.append(beer_vector)
-
-    #     return beer_vectors
-
-    # def calc_similarity(self, first, second):
-
-    #     def dot_product(first, second):
-    #         return sum(map(operator.mul, first, second))
-
-    #     prod = dot_product(first, second)
-    #     len1 = math.sqrt(dot_product(first, first))
-    #     len2 = math.sqrt(dot_product(second, second))
-    #     return prod / (len1 * len2)
-
 if __name__ == "__main__":
     ds = DrinkSmart()
     print("---- Overall Dataset ----------")
@@ -272,10 +182,6 @@ if __name__ == "__main__":
     #ds.normalize_all_reviews()
     print("pivoting reviews to get collected reviews")
     ds.pivot_reviews(column_name='review_overall',save_to_csv=True, file_name='nonnormalized_collected_reviews.csv')
-
-    #print("Building beer-by-beer similarity matrix...")
-    #ds.build_similarity_matrix()
-    pdb.set_trace()
 
 
 # END #
