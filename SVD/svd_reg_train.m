@@ -1,12 +1,14 @@
-function [mse, svd] = svd_train_from_start_point(X, svd_in, params)
+function [mse, svd] = svd_reg_train(X, svd_in, params, w)
 %% Uses gradient descent to find optimal U and V for SVD
 % INPUTS:
 %   X - n x d
-%   grad_0.U - n x k
-%   grad_0.V - d x k
+%   svd.U - n x k
+%   svd.V - d x k
 %   params.batch_size - 1x1
 %   params.stepsize - 1x1
 %   params.max_iterations = 1x1
+%   w.ku - 1 x 1
+%   w.kv - 1 x 1
 %
 % OUTPUTS:
 %   mse - row vector with evolved mse errors
@@ -18,7 +20,7 @@ d = size(X,2);
 n = size(X,1);
 
 svd = svd_in;
-%[~, svd] = svd_error(X, svd_in);
+%[~, svd] = svd_error(X, grad_0);
 mse = [];
 for iter = 1:params.max_iterations  
     
@@ -30,23 +32,15 @@ for iter = 1:params.max_iterations
         svd_batch.U = svd.U(batch,:);
         svd_batch.V = svd.V;
         
-        % update U
-        [~, grad] = svd_error(Xbatch, svd_batch);
+        % update U 
+        [~, grad] = svd_reg_error(Xbatch,svd_batch, w);
         svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
     end
-    % update V
-    [~,grad] = svd_error(X,svd);
+    [~,grad] = svd_reg_error(X,svd, w);
     svd.V = svd.V - (params.step_size) * grad.V;      
     
-    % decrease the step size -- remove
-    % params.step_size = params.step_size / iter  
-%     if iter == 200
-%         params.step_size = params.step_size * 10;
-%         fprintf('increasing step size to %f\n',params.step_size)
-%     end
-    
     % keep track of the MSE across iterations
-    mse = [mse, svd_error(X,svd)];      
+    mse = [mse, svd_reg_error(X,svd,w)];      
     fprintf('svd_train: iter %d, mse %.4f\n', iter, mse(end));
        
     % threshold = 1e-3;

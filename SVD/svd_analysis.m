@@ -2,12 +2,16 @@
 close all; clear all;
 X = importdata('data/nonnormalized_collected_reviews.csv',',');
 
+sparcity = length(find(~isnan(X.data))) / (size(X.data,1) * size(X.data,2))
+
 % ---- SET PARAMETERS HERE ---- %
-K = 200;
+K = 3;
 params.max_iterations = 1200;
-params.threshold = 1e-3;
+params.threshold = 1e-4;
 params.step_size = 1e-3;
-params.batch_size = 200;
+params.batch_size = 10;
+w.k_U = 1;
+w.k_V = 1;
 
 % strip any reviewers who didn't have any beers reviewed in this set
 to_remove = sum(~isnan(X.data),2) == 0;
@@ -46,8 +50,11 @@ init_lim = 1;
 svd.U = unifrnd( -init_lim, init_lim, [n, K]); 
 svd.V = unifrnd( -init_lim, init_lim, [d, K]);
 
-% train and optimize
-[mse, best_UV] = svd_train(Xtrain, svd, params);
+% train without regularization
+[mse, best_UV] = svd_train(Xtrain,svd,params);
+
+% train and optimize with regularization
+%[mse, best_UV] = svd_reg_train(Xtrain, svd, params, w);
 
 figure();
 plot(mse,'rx');
@@ -57,15 +64,22 @@ title_str = sprintf('n = %d, d = %d\nEnd MSE: %.4f -- %d iterations\n|U| = %.1f,
     n,d,mse(end),length(mse),norm(best_UV.U),norm(best_UV.V));
 title(title_str);
 
-print -dpng 'figures/big_non_normal_svd_training_gd'
+print -dpng 'figures/regularized_svd'
 
 %% now test U and V
-Xtest(isnan(Xtest)) = 0;
-predictions = best_UV.U * best_UV.V';
-user_errors = sum( (test_mask .* (Xtest - predictions)).^2,2) ./ ...
-    sum(test_mask,2);
-test_error = mean(user_errors);
+[beer_avg_mse, user_avg_mse, beer_mse_var, user_mse_var] = get_avg_baseline(Xtest)
+[test_error, user_err_avgs, user_error_var] = svd_testing_error(Xtest, best_UV.U, best_UV.V);
+
 fprintf('Testing error is %.4f\n',test_error);
+
+figure();
+subplot(1,2,1)
+hist(user_err_avgs,100);
+title('average errors for users')
+
+subplot(1,2,2)
+hist(user_error_var,100);
+title('variance of errors for users')
 
 % --- predict for holdout data set and get error --- 
 %holdout_error = svd_predict_and_test(Xtest,best_UV.V);

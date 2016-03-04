@@ -1,7 +1,7 @@
 %% load the training and testing dataset
 close all; clear all;
 
-d = importdata('small_collected_reviews.csv',',');
+d = importdata('data/small_collected_reviews.csv',',');
 X = d.data;
 
 n = size(X, 1)

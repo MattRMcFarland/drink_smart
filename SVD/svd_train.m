@@ -18,37 +18,29 @@ d = size(X,2);
 n = size(X,1);
 
 svd = svd_in;
-%[~, svd] = svd_error(X, grad_0);
 mse = [];
 for iter = 1:params.max_iterations  
     
-    for i = 1:params.batch_size:size(X, 1)
-        % define the batch set        
-        batch = i:min(i+params.batch_size-1, size(X, 1));
-        Xbatch = X(batch, :); 
-        
-        svd_batch.U = svd.U(batch,:);
-        svd_batch.V = svd.V;
-        
-        % update U and V
-        [~, grad] = svd_error(Xbatch,svd_batch);
-        svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
-    end
-    [~,grad] = svd_error(X,svd);
-    svd.V = svd.V - (params.step_size) * grad.V;      
-    
-    % decrease the step size -- remove
-    % params.step_size = params.step_size / iter  
-%     if iter == 200
-%         params.step_size = params.step_size * 10;
-%         fprintf('increasing step size to %f\n',params.step_size)
+%     for i = 1:params.batch_size:size(X, 1)
+%         % define the batch set        
+%         batch = i:min(i+params.batch_size-1, size(X, 1));
+%         Xbatch = X(batch, :); 
+%         
+%         svd_batch.U = svd.U(batch,:);
+%         svd_batch.V = svd.V;
+%         
+%         % update U 
+%         [~, grad] = svd_error(Xbatch,svd_batch);
+%         svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
 %     end
-    
+    [~,grad] = svd_error(X,svd);
+    svd.U = svd.U - (params.step_size) * grad.U;
+    svd.V = svd.V - (params.step_size) * grad.V;      
+
     % keep track of the MSE across iterations
     mse = [mse, svd_error(X,svd)];      
-    fprintf('svd_train: iter %d, mse %.4f\n', iter, mse(end));
+    fprintf('svd_train: iter %d, mse %.5f\n', iter, mse(end));
        
-    % threshold = 1e-3;
     % stopping criterion
     if (length(mse) > 1 && max(abs(mse(end) - mse(end-1))) < params.threshold) || ...
             (length(mse) > 1 && (mse(end) - mse(end-1) > 0))

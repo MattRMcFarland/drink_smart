@@ -175,13 +175,13 @@ if __name__ == "__main__":
     ds = DrinkSmart()
     print("---- Overall Dataset ----------")
     ds.calculate_summary_statistics()
-    ds.filter_on_beer_reviewer_counts(200, 40)
+    ds.filter_on_beer_reviewer_counts(400, 20)
     print("---- Filtered Datset --------- ")
     ds.calculate_summary_statistics()
     #print("Normalizing all reviews...")
     #ds.normalize_all_reviews()
     print("pivoting reviews to get collected reviews")
-    ds.pivot_reviews(column_name='review_overall',save_to_csv=True, file_name='nonnormalized_collected_reviews.csv')
+    ds.pivot_reviews(column_name='review_overall', save_to_csv=True, file_name='beers.csv')
 
 
 # END #
