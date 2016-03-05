@@ -2,6 +2,8 @@
 data/split_files/*
 new file:   data/split_files/beer_reviews_small*
 
+SVD/nmfv1_4/*
+graph_code/*
 code/*
 
 similarity_matrix.csv

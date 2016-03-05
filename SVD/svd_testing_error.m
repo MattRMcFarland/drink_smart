@@ -15,9 +15,11 @@ d = size(Xtest,2);
 test_mask = ~isnan(Xtest);
 Xtest(isnan(Xtest)) = 0;
 predictions = U * V';
-user_errors = sum( (test_mask .* (Xtest - predictions)).^2,2) ./ ...
-    sum(test_mask,2);
-testing_error = mean(user_errors);
+%user_errors = sum( (test_mask .* (Xtest - predictions)).^2,2) ./ ...
+%    sum(test_mask,2);
+%testing_error = mean(user_errors);
+testing_error = sum(sum(test_mask .* (Xtest - predictions).^2,2)) ./ ...
+    sum(sum(test_mask,2));
 
 avg_user_mse = sum(test_mask .* (Xtest - predictions).^2,2) ./ ...
     sum(test_mask,2);

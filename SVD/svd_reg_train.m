@@ -24,19 +24,20 @@ svd = svd_in;
 mse = [];
 for iter = 1:params.max_iterations  
     
-    for i = 1:params.batch_size:size(X, 1)
-        % define the batch set        
-        batch = i:min(i+params.batch_size-1, size(X, 1));
-        Xbatch = X(batch, :); 
-        
-        svd_batch.U = svd.U(batch,:);
-        svd_batch.V = svd.V;
-        
-        % update U 
-        [~, grad] = svd_reg_error(Xbatch,svd_batch, w);
-        svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
-    end
+%     for i = 1:params.batch_size:size(X, 1)
+%         % define the batch set        
+%         batch = i:min(i+params.batch_size-1, size(X, 1));
+%         Xbatch = X(batch, :); 
+%         
+%         svd_batch.U = svd.U(batch,:);
+%         svd_batch.V = svd.V;
+%         
+%         % update U 
+%         [~, grad] = svd_reg_error(Xbatch,svd_batch, w);
+%         svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
+%     end
     [~,grad] = svd_reg_error(X,svd, w);
+    svd.U = svd.U - (params.step_size) * grad.U;
     svd.V = svd.V - (params.step_size) * grad.V;      
     
     % keep track of the MSE across iterations

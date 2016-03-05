@@ -10,8 +10,6 @@ I = ~isnan(X);
 X_zero = X;
 X_zero(isnan(X_zero)) = 0;
 
-global_mean = mean(sum(X_zero,1) ./ sum(I,1));
-
-
+global_mean = sum(sum(I .* X_zero,1)) / sum(sum(I,1));
 centered_data = X - ones(size(X,1),size(X,2)) * global_mean;
 end

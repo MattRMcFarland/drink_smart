@@ -17,11 +17,10 @@ k = size(svd.V, 2);
 
 I = ~isnan(X);      % get indicator
 X(isnan(X)) = 0;    % replace NaNs
-user_observation_count = sum(I,2);
 predictions = svd.U * svd.V';
 
-user_mse = sum( (I .* (X - predictions)).^2, 2) ./ user_observation_count;
-mse = mean(user_mse) + w.k_U * norm(svd.U) + w.k_V * norm(svd.V);
+mse = sum(sum((I .* (X - predictions)).^2, 2)) ./ sum(sum(I,1)) + ...
+    w.k_U * norm(svd.U) + w.k_V * norm(svd.V);
 
 grad.U = -2 * I .* (X - predictions) * svd.V + 2 * w.k_U * svd.U;
 grad.V = -2 * I' .* (X - predictions)' * svd.U + 2 * w.k_V * svd.V;
