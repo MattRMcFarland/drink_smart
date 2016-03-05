@@ -4,7 +4,7 @@ close all; clear all;
     % File and saved image?
     % 7k_users_800_beers.csv
     % nonnormalized_collected_reviews.csv
-    file_str = 'data/7k_nonnormalized_collected_reviews.csv';
+    file_str = 'data/7k_users_800_beers.csv';
     % graph_str = 'figures/7k_users_800_beers_centered';
 
     % test v. train split
@@ -17,16 +17,16 @@ close all; clear all;
     holdout_users = 10;
     
     % training parameters
-    K = 20;
+    K = 10;
     params.max_iterations = 1200;
-    params.threshold = 1e-3;
+    params.threshold = 1e-5;
     params.step_size = 1e-3;
     params.bias_step_size = 1e-5;
     params.batch_size = 10;
 
     % U and V regularization rates
-    w.k_U = .02;
-    w.k_V = .02;
+    w.k_U = 15;
+    w.k_V = 15;
     
     % type of training? Improved (and regularized svd) = 1
     svd_mode = 0;
@@ -132,6 +132,7 @@ elseif center_param == 4                % on users and then beers
     Xtrain = center_on_beer(Xtrain);
     Xtest = center_on_beer(Xtest); 
 elseif center_param == 5
+    fprintf('centering for avg rating and then user biases\n');
     Xtrain = Xtrain - base_line_predictions;
 else                                    % or globally
     fprintf('centering globally\n');
@@ -179,7 +180,7 @@ for i = 1:iters
 %     testing_error(i,1) = total_iterations;
 %     testing_error(i,2) = svd_testing_error(Xtest, UV.U, UV.V);
     
-    if (length(mse) == 2)
+    if (length(mse) < params.max_iterations)
         fprintf('stopping because training converged\n');
         break;
 %     elseif ((i > 1) && (testing_error(i,2) > testing_error(i-1,2)))
@@ -192,8 +193,6 @@ end
 if i == iters
     fprintf('stopped because maximum iterations was reached\n')
 end
-
-
 
 
 %% ---- REPORT RESULTS ---- %%
@@ -225,7 +224,7 @@ xlim=get(gca,'xlim');
 text(.35*(xlim(2)-xlim(1))+xlim(1),.6*(ylim(2)-ylim(1))+ylim(1),desc_str);
 
 %% ---- CHANGE PRINTED MSE GRAPH NAME HERE ---- %%
-print -dpng 'figures/7k_all_centered_on_avg_and_bias'
+print -dpng 'figures/7k_800u_centered_on_avg_and_bias'
 
 % record baselines (averages
 [test_error, user_err_avgs, user_error_var] = ...
