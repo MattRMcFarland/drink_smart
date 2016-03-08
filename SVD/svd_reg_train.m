@@ -1,4 +1,4 @@
-function [mse, svd] = svd_train(X, svd_in, params)
+function [mse, svd] = svd_reg_train(X, svd_in, params, w)
 %% Uses gradient descent to find optimal U and V for SVD
 % INPUTS:
 %   X - n x d
@@ -7,6 +7,8 @@ function [mse, svd] = svd_train(X, svd_in, params)
 %   params.batch_size - 1x1
 %   params.stepsize - 1x1
 %   params.max_iterations = 1x1
+%   w.ku - 1 x 1
+%   w.kv - 1 x 1
 %
 % OUTPUTS:
 %   mse - row vector with evolved mse errors
@@ -18,6 +20,7 @@ d = size(X,2);
 n = size(X,1);
 
 svd = svd_in;
+%[~, svd] = svd_error(X, grad_0);
 mse = [];
 for iter = 1:params.max_iterations  
     
@@ -30,17 +33,18 @@ for iter = 1:params.max_iterations
 %         svd_batch.V = svd.V;
 %         
 %         % update U 
-%         [~, grad] = svd_error(Xbatch,svd_batch);
+%         [~, grad] = svd_reg_error(Xbatch,svd_batch, w);
 %         svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;        
 %     end
-    [~,grad] = svd_error(X,svd);
+    [~,grad] = svd_reg_error(X,svd, w);
     svd.U = svd.U - (params.step_size) * grad.U;
     svd.V = svd.V - (params.step_size) * grad.V;      
-
+    
     % keep track of the MSE across iterations
-    mse = [mse, svd_error(X,svd)];      
-    fprintf('svd_train: iter %d, mse %.5f\n', iter, mse(end));
+    mse = [mse, svd_reg_error(X,svd,w)];      
+    fprintf('svd_train: iter %d, mse %.4f\n', iter, mse(end));
        
+    % threshold = 1e-3;
     % stopping criterion
     if (length(mse) > 1 && max(abs(mse(end) - mse(end-1))) < params.threshold) || ...
             (length(mse) > 1 && (mse(end) - mse(end-1) > 0))
