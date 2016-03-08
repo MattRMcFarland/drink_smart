@@ -6,8 +6,18 @@ code/*
 
 similarity_matrix.csv
 
+*.pyc
 *.mat
 *.csv
 beer_reviews.csv
 *~
+*.ipynb_checkpoints
+
 # ignore actual data files
+
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.gz
