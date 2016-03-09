@@ -98,7 +98,7 @@ class DrinkSmart:
 
     # ---- Testing / Training sets ------------------------------------------ #
     #def split_collected_reviews(self, train_percentage):
-        # should split apart 1 - train_percentage of the collected reviews 
+        # should split apart 1 - train_percentage of the collected reviews
         # matrix for testing
 
 
