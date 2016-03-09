@@ -17,8 +17,20 @@ I = ~isnan(X);      % get indicator
 X(isnan(X)) = 0;    % replace NaNs
 predictions = svd.U * svd.V';
 
-mse = sum(sum(I .* (X - predictions).^2,2)) ./ sum(sum(I,2));
+mse = sum(sum((I .* (X - predictions)).^2,2)) / sum(sum(I,2));
 
-grad.U = -2 * I .* (X - predictions) * svd.V;
-grad.V = -2 * I' .* (X - predictions)' * svd.U;
+grad.U = -2 * (I .* (X - predictions)) * svd.V;
+grad.V = -2 * (I .* (X - predictions))' * svd.U;
+
+% grad.U = zeros(n,k);
+% grad.V = zeros(d,k);
+% 
+% for i = 1:n
+%     for j = 1:d
+%         grad.U(i,:) = grad.U(i,:) + I(i,j) * ((X(i,j) - svd.U(i,:) * svd.V(j,:)') * svd.V(j,:));
+%         grad.V(j,:) = grad.V(j,:) + I(i,j) * ((X(i,j) - svd.U(i,:) * svd.V(j,:)') * svd.U(i,:));
+%     end
+% end
+% grad.U = -2 * grad.U;
+% grad.V = -2 * grad.V;
 
