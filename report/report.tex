@@ -155,7 +155,7 @@ Put another way, we predict the item's average and adjust for bias introduced by
 \subsection{Background}
 \paragraph{Theoretical Basis} Single Value Decomposition is a form of Principal Component Analysis, which factors a matrix $Y$ into component matrices $U * \Sigma * V^{T}$. Principal Component Analysis alters the basis of $Y$ so that, in the factorized form, the directions of greatest variance are exposed in decreasing order. In our dataset, $Y$ represents the user-item interaction matrix, and when we decompose that matrix to constituent parts $U$ and $V$, we will find the eigenvectors of $Y$ that define the directions of greatest variance. Single Value Decomposition limits the factorization to the $K$ most significant eigenvectors. Because $Y$ is very large, but very sparse, we can simplify the data by factoring to $U$ and $V$. Where $U$ is a $n$ by $k$ matrix where each row represents a latent feature vector for a user, and $V$ is a $d$ by $K$ matrix where each row represents the latent feature vector for an item. These latent feature vectors are meaningful because, given an incomplete $Y$ matrix (where not all user-item interactions are accounted for), we can iteratively train $U$ and $V$ to approximate the data we do have for $Y$. New user-item interactions (ratings) are predicted with $\hat{Y}_{ij} = U_{i}V_{j}^{T}$.
 
-\paragraph{Literature Review} Single Value Decomposition used a technique to simplify a large, sparse user-interaction matrix has been used very successfully before, most famously in the famous Netflix Prize \textbf{cite Gower paper}. Studies on the application of SVD to decompose a matrix has revealed several variants on the basic algorithm to increase the accuracy of the predictions. Such methods include adaptively altering the learning rate, changing the iterative update method, and adding regularization \textbf{cite Chih-Chao Ma paper}. Other have also added different normalization constants to the SVD analysis to account for quality and user biases \textbf{cite Paterek paper}. Simon Funk, a famous contestant in the Netflix algorithm further tuned the bias weights based on the number of reviews an item or user had {cite SF post}. Gower explains that successful Netflix SVD algorithms also incorporated time-based information about the user to increase the prediction's accuracy \textbf{cite Gower paper}. The SVD method has been explored extensively, and we will attempt to replicate some of the most successful methods on our dataset.
+\paragraph{Literature Review} Single Value Decomposition used a technique to simplify a large, sparse user-interaction matrix has been used very successfully before, most famously in the famous Netflix Prize\textsuperscript{\cite{gower}}. Studies on the application of SVD to decompose a matrix has revealed several variants on the basic algorithm to increase the accuracy of the predictions. Such methods include adaptively altering the learning rate, changing the iterative update method, and adding regularization\textsuperscript{\cite{ma}}. Other have also added different normalization constants to the SVD analysis to account for quality and user biases\textsuperscript{\cite{paterek}}. Simon Funk, a famous contestant in the Netflix algorithm further tuned the bias weights based on the number of reviews an item or user had \textbf{cite SF post}. Gower explains that successful Netflix SVD algorithms also incorporated time-based information about the user to increase the prediction's accuracy\textsuperscript{\cite{gower}}. The SVD method has been explored extensively, and we will attempt to replicate some of the most successful methods on our dataset.
 
 \subsection{Algorithm}
 The goal of the SVD find a $U$ and $V$ matrix that well approximate $Y$. This is accomplished by minimizing the following difference function $E(U,V)$.
@@ -215,4 +215,16 @@ This algorithm requires setting a threshold $s^*$ to discretize whether or not i
 
 \section{Next Steps}
 
+\begin{thebibliography}{9}
+
+\bibitem{gower}
+Gower, Stephen. ``Netflix Prize and SVD.'' (n.d.): n. pag. 18 Apr. 2014. Web. 9 Mar. 2016.
+
+\bibitem{ma}
+Ma, Chih-Chao. ``A Guide to Singular Value Decomposition for Collaborative Filtering.'' (n.d.): n. pag. Depart of Computer Science, National Taiwan University. Web. 9 Mar. 2016.
+
+\bibitem{paterek}
+Paterek, Arkadiusz. ``Improving Regularized Singular Value Decomposition for Collaborative Filtering.'' Institute of Informatics, Warsaw University, 12 Aug. 2007. Web.
+
+\end{thebibliography}
 \end{document}
