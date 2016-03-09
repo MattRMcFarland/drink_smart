@@ -9,14 +9,14 @@ dv = zeros( size(svd.V) );
 
 for i = 1:length(svd.U(:))
     net2 = svd; 
-    net2.U(i) = svd.U(i) + 1e-5;
+    net2.U(i) = svd.U(i) + epsilon;
     
     dw(i) = (fun(net2)-fun(svd)) / epsilon;
 end
 
 for i = 1:length(svd.V(:))
     net2 = svd; 
-    net2.V(i) = svd.V(i) + 1e-5;
+    net2.V(i) = svd.V(i) + epsilon;
     
     dv(i) = (fun(net2)-fun(svd)) / epsilon;
 end
