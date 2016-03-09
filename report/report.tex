@@ -32,14 +32,84 @@
 \maketitle
 \begin{abstract}
 % TODO
+Using a dataset of beer reviews from \textbf{Beer Advocate}, we attempt to predict a reviewer's scoring of an unencountered beer based on tastes expressed through their previous reviews. We use two collaborative filtering approaches to make predictions: \textbf{Singular Value Decomposition} and \textbf{Item-to-Item Collaborative Filtering}.
+
+Our baseline establishes...
+We find...
+
 \end{abstract}
-\newpage
+
+% Questions for Matt:
+
+% 1. Does order matter when finding the item residual (mean) and the user residual (mean) for the baseline
+% 2.
+
+\section{Preface}
+To keep our terminology consistent with existing literature in collaborative filtering, we will take \textit{users} to mean reviewers on Beer Advocate and \textit{items} to mean the beers under review. For a user $i$ and an item $j$, let $y_{ij}$ and $\hat y_{ij}$ give the actual and predicted rating of that user on that item, respectively.
 
 \section{Problem}
+We are presented with $\mathbf{X}$, an $m \times n$ matrix of $m$ users and their ratings of $n$ items. This matrix is sparse, as most users have only rated a small subset of items. We have no information about the nature of the users (e.g. age, gender) or the nature of the items. Our problem can be phrased as: \textbf{given a user $i$ and an item $j$ that user $i$ has not rated, predict $\hat y_{ij}$}.
+
+\paragraph{Collaborative Filtering} Given the lack of feature information (categorization of items, demographics of users, etc.), we cannot rely on supervised learning techniques. We thus turn to unsupervised methods and collaborative filtering, in particular. Collaborative Filtering techniques attempt to establish similarities in user preferences for certain items based on observed ratings. Predicted ratings rise when a user favorably rates items similar to the predicted item.
+
+\paragraph{Training} This process first requires establishing which items are similar to each other. Intuitively, if a user rates two items in the same fashion (both poorly or both well), then they are similar. If the user rates them oppositely, they are dissimilar. In our SVD analysis, we establish a set of latent features describing items that are similar in some respect, as determined by user preferences. For Item-Based Collaborative Filtering, we generate a correlation matrix that describes the similarity between all pairings of items.
+
+\paragraph{Prediction} Intuitively, if a user favorably rates item $A$, which is quite similar to an unrated item $B$, we expect the user to favorably rate item $B$. In the prediction stage, we make use of the user's provided ratings to make inferences about an unkown rating.
 
 \section{Data}
+Our dataset contains $1,586,599$ reviews concerning $m = 33,388$ users and $n = 65,680$ items. Not all items receive the same number of reviews, nor do all reviewers rate the same number of items. We find that our dataset is highly skewed, with many items and users possessing quite few reviews.
+
+Each review contains a rating on a scale from $0$ to $5$ by intervals of $\frac{1}{2}$. It also provides user rating along several other metrics (palate, taste, appearance, aroma) as well as some information about the item itself (brewery, style, alcohol by volume). We limit our analysis to use the primary rating.
+
+\section{Pre-Processing}
+The dataset is arranged into a list of ratings, where each rating represents one user's rating of one item. To generate our user-by-item matrix $\mathbf{X}$, we must rearrange these reviews and extract the primary rating. We additionally remove all users who have not rated a certain number of items and all items that have not received a certain number of ratings. The denser the network of users and items, the better we can establish similarities amongst preferences and items. Removing obscure items and reviewers whose tastes are relatively unknown reduces the noise without hindering prediction quality.
+
+Additionally, we form a modified user-by-item matrix $\mathbf{\bar X}$, where:
+
+$$ \mathbf{\bar X}_{ij} = \mathbf{X}_{ij} - \mu_{global} - \mu_{user_i} \mu_{item_j}$$
+
+We derive the $\mu$ terms in our baseline algorithm. Intuitively, $\mathbf{\bar X}$ represents the residual of a rating that is not explained by the item's average (its ``quality'') and the user's rating tendencies.
+
+\subsection{Summary Statistics}
+
+\begin{table}[ht!]
+\centering
+\caption{Summary Statistics}
+\begin{tabular}{ll}
+\hline
+Number of Reviews         & 1,586,599 \\
+Number of Items           & 65,680    \\
+Number of Users           & 33,388    \\
+Rating Minimum            & 5.0       \\
+Rating Maximum            & 0.0       \\
+Rating Mean               & 3.82      \\
+Rating Variance           & 0.52      \\
+Rating Standard Deviation & 0.72      \\ \hline
+\end{tabular}
+\end{table}
+
 
 \section{Methods}
+We use three methods to make predictions:
+
+\begin{enumerate}
+  \item \textbf{Baseline}: use rating means rather than machine learning approaches to establish a baseline prediction against which we can compare our more advanced approaches.
+  \item \textbf{Singular Value Decomposition}: uses feature reduction to expose latent features in the items and user preferences.
+  \item \textbf{Item-Based Collaborative Filtering}: uses a correlation matrix comparing all pairs of items and predicts based on ratings of similar items
+\end{enumerate}
+
+\section{Baseline}
+To evaluate the success of our approaches, we first establish a simplified prediction algorithm. For many datasets, this naive approach yields decent results and can be hard to improve upon.
+
+Our baseline algorithm first calculates a series of means. First, we derive the global mean, $\mu_{global}$, across all ratings. From our summary statistics, we see that this figure is around $3.82$. After subtracting $\mu_{global}$ from all ratings in $\mathbf{X}$, we calculate the residual mean for each item, $\mu_{item}$. This gives a sense of the quality and appeal of the item. Lastly, after subtracting both $\mu_{global}$ and $\mu_{item}$ (for each item) from $\mathbf{X}$, we calculate the residual mean for each user, $\mu_{user}$. This tells us whether a user is a generous or harsh rater. Both $\mu_{user}$
+
+We form the predicted rating for user $i$ on item $j$ by calculating:
+
+$$\hat y_{ij} = \mu_{global} + \mu_{user_i} + \mu_{item_j}$$
+
+Put another way, we predict the global mean and adjust for bias introduced by the quality of the item and the user's rating tendency (harsh or easy).
+
+\subsection{Results}
 
 \section{Singular Value Decomposition}
 
@@ -47,10 +117,34 @@
 \subsection{Hyper-Parameter Tuning}
 \subsection{Results}
 
-\section{Item-by-Item Collaborative Filtering}
+\section{Item-Based Collaborative Filtering}
 
 \subsection{Algorithm}
+\paragraph{Training} For this method, we similarly begin from our residual feature matrix $\mathbf{\bar X}$. We generate an $n \times n$ correlation matrix $\mathbf{C}$. The entry $\mathbf{C}_{ij}$ describes the similarity of ratings between items $i$ and $j$. If a particular user reviews both items $i$ and $j$ favorably, the similarity increases. If the user reviews both poorly, the similarity also increases. If the user rates one postively and the other negatively, the similarity decreases. We use the Pearson Product-Moment Correlation to determine these similarity scores, which fall in the range $[-1, 1]$.
+
+Our prediction step requires knowing which items are ``similar'' to each other. We must discretize $\mathbf{C}$ such that correlation scores above a certain threshold $s^*$ are considered ``similar''. By applying this threshold to all entries in $\mathbf{C}$, we generate an $n \times n$ matrix $\mathbf{S}$, where:
+
+$$
+\mathbf{S}_{ij} =
+\begin{cases}
+    \hfill 1    \hfill & \text{ if items $i$ and $j$ are similar} \\
+    \hfill 0    \hfill & \text{ otherwise} \\
+\end{cases}
+$$
+
+\paragraph{Prediction} Armed with the similarity matrix $\mathbf{S}$, we can make predictions. For a given user $i$, we wish to predict their rating on an item $j$ that they have not yet rated, given their past ratings. Letting $S$ be a set of items similar to the predicted item $j$ that the user has also rated, We predict $\hat y_{ij}$, where:
+
+$$ \hat y_{ij} = \mu_{global} + \mu_{user_i} + \mu_{item_j} + \frac{\sum_{s \in S} \mathbf{\bar X_{is}}}{\sum_{s \in S} 1 }$$
+
+We predict our baseline plus an item-based collaborative filtering term. This term sums the users ratings for items similar to $j$ and divides by the number of similar items that the user has rated (takes an average).
+
 \subsection{Hyper-Parameter Tuning}
+This algorithm requires setting a threshold $s^*$ to discretize whether or not items are similar to each other. We first explore how tuning $s^*$ impacts our results in terms of Mean-Squared Error.
+
 \subsection{Results}
+
+\section{Comparison of Methods}
+
+\section{Next Steps}
 
 \end{document}

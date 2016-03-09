@@ -110,14 +110,17 @@ base_line_predictions = repmat(beer_avgs,length(user_bias),1) + ...
 %% ---- CENTER DATA ---- %%
 if center_param == 0                    % do nothing
     fprintf('not centering the data');  
+    
 elseif center_param == 1                % on user
     fprintf('centering on users\n');
     Xtrain = center_on_user(Xtrain);
     Xtest = center_on_user(Xtest);
+    
 elseif center_param == 2                % on beers
     fprintf('centering on beers\n');
     Xtrain = center_on_beer(Xtrain);
-    Xtest = center_on_beer(Xtest);    
+    Xtest = center_on_beer(Xtest); 
+    
 elseif center_param == 3                % on beers and then users
     fprintf('centering on beers\n');    
     Xtrain = center_on_beer(Xtrain);
@@ -125,6 +128,7 @@ elseif center_param == 3                % on beers and then users
     fprintf('centering on users\n');   
     Xtrain = center_on_user(Xtrain);
     Xtest = center_on_user(Xtest);
+    
 elseif center_param == 4                % on users and then beers
     fprintf('centering on users\n');    
     Xtrain = center_on_user(Xtrain);
@@ -132,10 +136,12 @@ elseif center_param == 4                % on users and then beers
     fprintf('centering on beers\n');    
     Xtrain = center_on_beer(Xtrain);
     Xtest = center_on_beer(Xtest); 
+    
 elseif center_param == 5
     fprintf('centering for avg rating and then user biases\n');
     Xtrain = Xtrain - base_line_predictions;
     Xtest = test_residuals;
+    
 else                                    % or globally
     fprintf('centering globally\n');
     Xtrain = center_globally(Xtrain);

@@ -1,8 +1,9 @@
 %% load the training and testing dataset
 close all; clear all;
 
-d = importdata('data/small_collected_reviews.csv',',');
-X = d.data;
+%d = importdata('data/small_collected_reviews.csv',',');
+%X = d.data;
+X = unifrnd( -.5, .5, [1000, 100]);     % randomly set X
 
 n = size(X, 1);
 d = size(X, 2);
@@ -18,8 +19,6 @@ if small_d > d
     small_d = d
 end
 
-% redefine X so it doesn't have any missing values
-X = unifrnd( -.5, .5, [small_n, small_d]);
 
 %% Checking your gradient: compare your gradient with the numerical gradient
 perturb = -5:1:5;
@@ -28,19 +27,19 @@ epsilon = 1e-5;
 for i = 1:length(perturb)
     % to make sure your gradient is correct,you can compare your gradient 
     % calculating with numerical gradient
-    %small_i = randperm(size(X,1), small_n);
-    %small_x = X(small_i, 1:small_d); 
+    small_i = randperm(size(X,1), small_n);
+    small_x = X(small_i, 1:small_d); 
     
     % randomly initialize U and V
     svd.U = unifrnd( -.5, .5, [small_n, K]);  
     svd.V = unifrnd( -.5, .5, [small_d, K]);
     
     % get gradient
-    [mse, grad] = svd_error(X, svd); 
+    [mse, grad] = svd_error(small_x, svd); 
     grd = [grd; [grad.U(:)', grad.V(:)']];
     
     % get numerical gradient
-    fun=@(th)(svd_error(X, th));
+    fun=@(th)(svd_error(small_x, th));
     [du, dv] = numerical_gradient(fun, svd);  
     grd2 = [grd2; [du(:)', dv(:)']]; % evaluate the numerical gradient
     fprintf('Iteration: %d\n',i);
