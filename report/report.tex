@@ -42,7 +42,7 @@ We find...
 % Questions for Matt:
 
 % 1. Does order matter when finding the item residual (mean) and the user residual (mean) for the baseline
-% 2.
+% 2. ^ Yes. Need to normalize for beer mean bias first. Then get user offset of beer means deltas.
 
 \section{Preface}
 To keep our terminology consistent with existing literature in collaborative filtering, we will take \textit{users} to mean reviewers on Beer Advocate and \textit{items} to mean the beers under review. For a user $i$ and an item $j$, let $y_{ij}$ and $\hat y_{ij}$ give the actual and predicted rating of that user on that item, respectively.
@@ -50,16 +50,16 @@ To keep our terminology consistent with existing literature in collaborative fil
 \section{Problem}
 We are presented with $\mathbf{X}$, an $m \times n$ matrix of $m$ users and their ratings of $n$ items. This matrix is sparse, as most users have only rated a small subset of items. We have no information about the nature of the users (e.g. age, gender) or the nature of the items. Our problem can be phrased as: \textbf{given a user $i$ and an item $j$ that user $i$ has not rated, predict $\hat y_{ij}$}.
 
-\paragraph{Collaborative Filtering} Given the lack of feature information (categorization of items, demographics of users, etc.), we cannot rely on supervised learning techniques. We thus turn to unsupervised methods and collaborative filtering, in particular. Collaborative Filtering techniques attempt to establish similarities in user preferences for certain items based on observed ratings. Predicted ratings rise when a user favorably rates items similar to the predicted item.
+\paragraph{Collaborative Filtering} Given the lack of feature information (categorization of items, demographics of users, etc.), we cannot rely on supervised learning techniques. We thus turn to unsupervised methods and collaborative filtering, in particular. Collaborative Filtering techniques attempt to establish similarities in user preferences for certain items based on observed user-item interactions. Predicted ratings rise when a user favorably rates items similar to the predicted item.
 
 \paragraph{Training} This process first requires establishing which items are similar to each other. Intuitively, if a user rates two items in the same fashion (both poorly or both well), then they are similar. If the user rates them oppositely, they are dissimilar. In our SVD analysis, we establish a set of latent features describing items that are similar in some respect, as determined by user preferences. For Item-Based Collaborative Filtering, we generate a correlation matrix that describes the similarity between all pairings of items.
 
-\paragraph{Prediction} Intuitively, if a user favorably rates item $A$, which is quite similar to an unrated item $B$, we expect the user to favorably rate item $B$. In the prediction stage, we make use of the user's provided ratings to make inferences about an unkown rating.
+\paragraph{Prediction} Intuitively, if a user favorably rates item $A$, which is quite similar to an unrated item $B$, we expect the user to favorably rate item $B$. In the prediction stage, we make use of the user's provided ratings to make inferences about an unkown rating. In SVD analysis, we can predict the score of an unreviewed item by finding the product of that user's latent feature vector multiplied by that item's latent feature vector.
 
 \section{Data}
 Our dataset contains $1,586,599$ reviews concerning $m = 33,388$ users and $n = 65,680$ items. Not all items receive the same number of reviews, nor do all reviewers rate the same number of items. We find that our dataset is highly skewed, with many items and users possessing quite few reviews.
 
-Each review contains a rating on a scale from $0$ to $5$ by intervals of $\frac{1}{2}$. It also provides user rating along several other metrics (palate, taste, appearance, aroma) as well as some information about the item itself (brewery, style, alcohol by volume). We limit our analysis to use the primary rating.
+Each review contains a rating on a scale from $0$ to $5$ by intervals of $\frac{1}{2}$. It also provides user rating along several other metrics (palate, taste, appearance, aroma) as well as some information about the item itself (brewery, style, alcohol by volume). We limit our analysis to use the primary rating ('overall review').
 
 \section{Pre-Processing}
 The dataset is arranged into a list of ratings, where each rating represents one user's rating of one item. To generate our user-by-item matrix $\mathbf{X}$, we must rearrange these reviews and extract the primary rating. We additionally remove all users who have not rated a certain number of items and all items that have not received a certain number of ratings. The denser the network of users and items, the better we can establish similarities amongst preferences and items. Removing obscure items and reviewers whose tastes are relatively unknown reduces the noise without hindering prediction quality.
@@ -98,6 +98,12 @@ We use three methods to make predictions:
   \item \textbf{Item-Based Collaborative Filtering}: uses a correlation matrix comparing all pairs of items and predicts based on ratings of similar items
 \end{enumerate}
 
+\section{Error Measurement}
+In accordance with the literature standard, we evaluate the performance of our algorithms with the Mean Squared Error (MSE) measurement, defined as follows: 
+
+% $$ \mathbf{MAE} = \frac{\sum\limits_{i,j \epsilon S} \mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}{\sum\limits_{i,j \epsilon S}\mathbf{\|S\|} $$
+$$ \mathbf{MSE} = \frac{\sum\limits_{i,j \epsilon S} {\mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}^2}{\sum\limits_{i,j \epsilon S}{\mathbf{\|S\|}}^2} $$
+
 \section{Baseline}
 To evaluate the success of our approaches, we first establish a simplified prediction algorithm. For many datasets, this naive approach yields decent results and can be hard to improve upon.
 
@@ -112,10 +118,38 @@ Put another way, we predict the global mean and adjust for bias introduced by th
 \subsection{Results}
 
 \section{Singular Value Decomposition}
+\subsection{Background}
+\paragraph{Theoretical Basis} Single Value Decomposition is a form of Principal Component Analysis, which factors a matrix $Y$ into component matrices $U * \Sigma * V^{T}$. Principal Component Analysis alters the basis of $Y$ so that, in the factorized form, the directions of greatest variance are exposed in decreasing order. In our dataset, $Y$ represents the user-item interaction matrix, and when we decompose that matrix to constituent parts $U$ and $V$, we will find the eigenvectors of $Y$ that define the directions of greatest variance. Single Value Decomposition limits the factorization to the $K$ most significant eigenvectors. Because $Y$ is very large, but very sparse, we can simplify the data by factoring to $U$ and $V$. Where $U$ is a $n$ by $k$ matrix where each row represents a latent feature vector for a user, and $V$ is a $d$ by $K$ matrix where each row represents the latent feature vector for an item. These latent feature vectors are meaningful because, given an incomplete $Y$ matrix (where not all user-item interactions are accounted for), we can iteratively train $U$ and $V$ to approximate the data we do have for $Y$. New user-item interactions (ratings) are predicted with $\hat{Y}_{ij} = U_{i}V_{j}^{T}$.
 
+\paragraph{Literature Review} Single Value Decomposition used a technique to simplify a large, sparse user-interaction matrix has been used very successfully before, most famously in the famous Netflix Prize \textbf{cite Gower paper}. Studies on the application of SVD to decompose a matrix has revealed several variants on the basic algorithm to increase the accuracy of the predictions. Such methods include adaptively altering the learning rate, changing the iterative update method, and adding regularization \textbf{cite Chih-Chao Ma paper}. Other have also added different normalization constants to the SVD analysis to account for quality and user biases \textbf{cite Paterek paper}. Simon Funk, a famous contestant in the Netflix algorithm further tuned the bias weights based on the number of reviews an item or user had {cite SF post}. Gower explains that successful Netflix SVD algorithms also incorporated time-based information about the user to increase the prediction's accuracy \textbf{cite Gower paper}. The SVD method has been explored extensively, and we will attempt to replicate some of the most successful methods on our dataset.
+  
 \subsection{Algorithm}
+The goal of the SVD find a $U$ and $V$ matrix that well approximate $Y$. This is accomplished by minimizing the following difference function $E(U,V)$.
+
+$$ [\hat{U}, \hat{V}] = \min{\|Y_{ij} - \hat{Y}_{ij}\|}^2 = \min\limits_{U,V}{\|Y_{ij} - U_i V_j^T\|}^2$$
+
+Because $Y$ is incomplete, we cannot solve for the closed form solution and thus must update $U$ and $V$ iteratively with a gradient descent. ($S$ is the set of observed user-item iteractions, and $I$ is the indicator of seen ratings for $Y$.)
+
+$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) V_j $$
+
+\begin{center}
+  In compact matrix form, this is $\frac{\partial E}{\partial U} = -2 * I (Y - U V^T)U $ 
+\end{center}
+
+$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) U_i $$
+
+\begin{center}
+  In compact matrix form, this is $\frac{\partial E}{\partial V} = -2 * (I (Y - U V^T))^T V $
+\end{center}
+
 \subsection{Hyper-Parameter Tuning}
+Had to cross validate for regularization...
+
+Tried different bias methods...
+
 \subsection{Results}
+
+Hard to beat the mean?
 
 \section{Item-Based Collaborative Filtering}
 
