@@ -48,25 +48,25 @@ class Simulator:
 
         return results
 
-    def simulate_2D(self, func, first_name, first_options, second_name, second_options, args=[]):
+    # def simulate_2D(self, func, first_name, first_options, second_name, second_options, args=[]):
 
-        results = []
+    #     results = []
 
-        for first_option in first_options:
+    #     for first_option in first_options:
 
-            result_row = []
+    #         result_row = []
 
-            for second_option in second_options:
+    #         for second_option in second_options:
 
-                kwargs = {
-                    first_name: first_option,
-                    second_name: second_option
-                }
+    #             kwargs = {
+    #                 first_name: first_option,
+    #                 second_name: second_option
+    #             }
 
-                result = func(*args, **kwargs)
-                result_row.append(result)
+    #             result = func(*args, **kwargs)
+    #             result_row.append(result)
 
-            results.append(result_row)
+    #         results.append(result_row)
 
 if __name__ == "__main__":
     sim = Simulator()
