@@ -24,23 +24,23 @@ svd = svd_in;
 mse = [];
 for iter = 1:params.max_iterations  
     
-    %for i = 1:params.batch_size:size(X, 1)
-    for i = 1:4
+    for i = 1:params.batch_size:size(X, 1)
+    %for i = 1:4
         % define the batch set        
         batch = i:min(i+params.batch_size-1, size(X, 1));
         Xbatch = X(batch, :); 
         
         svd_batch.U = svd.U(batch,:);
-        svd_batch.V = svd.V(batch,:);
+        svd_batch.V = svd.V;
         
         % update U 
         [~, grad] = svd_reg_error(Xbatch,svd_batch, w);
-        svd.U = svd.U - (params.step_size / params.batch_size) * grad.U;
-        svd.V = svd.V - (params.step_size / params.batch-size) * grad.V;
+        svd.U(batch,:) = svd.U(batch,:) - (params.step_size / params.batch_size) * grad.U;
+        svd.V = svd.V - (params.step_size / params.batch_size) * grad.V;
     end
-    %[~, grad] = svd_reg_error(X,svd, w);
-    %svd.U = svd.U - (params.step_size) * grad.U;
-    %svd.V = svd.V - (params.step_size) * grad.V;      
+%     [~, grad] = svd_reg_error(X,svd, w);
+%     svd.U = svd.U - (params.step_size) * grad.U;
+%     svd.V = svd.V - (params.step_size) * grad.V;      
     
     % keep track of the MSE across iterations
     mse = [mse, svd_reg_error(X,svd,w)];      
@@ -48,12 +48,13 @@ for iter = 1:params.max_iterations
        
     % threshold = 1e-3;
     % stopping criterion
-%     if (length(mse) > 1 && max(abs(mse(end) - mse(end-1))) < params.threshold) || ...
-%             (length(mse) > 1 && (mse(end) - mse(end-1) > 0))
-%         fprintf('svd_train: reached stopping threshold at iteration %d for with MSE %.4G\n',...
-%             iter,mse(end))
-%         break;
-%     end        
+    % condition to stop when descent threshold is reached: 
+    % length(mse) > 1 && max(abs(mse(end) - mse(end-1))) < params.threshold)
+    if ( length(mse) > 1 && (mse(end) - mse(end-1) > 0) )
+        fprintf('svd_train: reached stopping threshold at iteration %d for with MSE %.4G\n',...
+            iter,mse(end))
+        break;
+    end        
       
 end
 fprintf('stopping now.\nIterations: %d\nMagnitude of svd.U: %f\nMagnitude of svd.V: %d\n',...
