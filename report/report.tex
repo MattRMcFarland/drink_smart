@@ -158,32 +158,52 @@ Put another way, we predict the item's average and adjust for bias introduced by
 \paragraph{Literature Review} Single Value Decomposition used a technique to simplify a large, sparse user-interaction matrix has been used very successfully before, most famously in the famous Netflix Prize\textsuperscript{\cite{gower}}. Studies on the application of SVD to decompose a matrix has revealed several variants on the basic algorithm to increase the accuracy of the predictions. Such methods include adaptively altering the learning rate, changing the iterative update method, and adding regularization\textsuperscript{\cite{ma}}. Other have also added different normalization constants to the SVD analysis to account for quality and user biases\textsuperscript{\cite{paterek}}. Simon Funk, a famous contestant in the Netflix algorithm further tuned the bias weights based on the number of reviews an item or user had \textbf{cite SF post}. Gower explains that successful Netflix SVD algorithms also incorporated time-based information about the user to increase the prediction's accuracy\textsuperscript{\cite{gower}}. The SVD method has been explored extensively, and we will attempt to replicate some of the most successful methods on our dataset.
 
 \subsection{Algorithm}
-The goal of the SVD find a $U$ and $V$ matrix that well approximate $Y$. This is accomplished by minimizing the following difference function $E(U,V)$.
+The goal of the SVD find a $U$ and $V$ matrix that well approximate $Y$. This is accomplished by minimizing the following difference function $E(U,V)$. In order to prevent overtraining, we also regularize for $U$ and $V$. $U$ and $V$ were updated with stochastic gradient descent until the training error increased. 
 
-$$ [\hat{U}, \hat{V}] = \min{\|Y_{ij} - \hat{Y}_{ij}\|}^2 = \min\limits_{U,V}{\|Y_{ij} - U_i V_j^T\|}^2$$
+$$ [\hat{U}, \hat{V}] = \min{\|Y_{ij} - \hat{Y}_{ij}\|}^2 = \min\limits_{U,V}{\|Y_{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
 
 Because $Y$ is incomplete, we cannot solve for the closed form solution and thus must update $U$ and $V$ iteratively with a gradient descent. ($S$ is the set of observed user-item iteractions, and $I$ is the indicator of seen ratings for $Y$.)
 
-$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) V_j $$
+$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) V_j + w_U U_i$$
 
 \begin{center}
-  In compact matrix form, this is $\frac{\partial E}{\partial U} = -2 * I (Y - U V^T)U $
+  In compact matrix form, this is $\frac{\partial E}{\partial U} = -2 * I (Y - U V^T) U + w_U U$
 \end{center}
 
-$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) U_i $$
+$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) U_i + w_V V_j$$
 
 \begin{center}
-  In compact matrix form, this is $\frac{\partial E}{\partial V} = -2 * (I (Y - U V^T))^T V $
+  In compact matrix form, this is $\frac{\partial E}{\partial V} = -2 * (I (Y - U V^T))^T V + w_V V$
 \end{center}
+
+Where $U$ and $V$ were updated with schotastic gradient descent (where $\mu$ is the learning rate / step size)
+
+$$ U_{i+1} = U - \mu * \frac{\partial E}{\partial U} \\$$
+
+$$ V_{i+1} = V - \mu * \frac{\partial E}{\partial V} \\$$
 
 \subsection{Hyper-Parameter Tuning}
-Had to cross validate for regularization...
+There were four hyper-parameters to tune for the regularized SVD: The learning rate, the regulariations weights for $U$ and $V$, and $K$ which determines the number of eigenvalues taken in $U$ and $V$. Because cross-validate testing among all four hyper parameters would be too time intensive, we opted to select the regularization weights $w_U = 20.0$ and $w_V = 10.0$ which generally extended the training as long as possible. We selected a learning rate varying from $0.5 to .001$ depending which data we were training on. We attempted to use the largest training rate that would not diverge.  
 
 Tried different bias methods...
 
 \subsection{Results}
 
-Hard to beat the mean?
+We were able to realize an MSE of $.3286$ which represented an improvement of $2.1\%$ over the bias baseline predictor (MSE of $.3356$). After centering the dataset on item biases and then centering for each user's bias over the centered item scores, we iteratively trained our SVD algorithm on the residuals. We used the previously found successful weights of $w_U = 20.0$ and $w_V = 10.0$ and the determined best $K = 3$ hyperparameter.
+
+\begin{figure}[!ht]
+\begin{center}
+\caption{SVD Training Results}
+    \includegraphics[width=.\textwidth]{./figures/big_full_convergence.jpg}
+\end{center}
+\end{figure}
+
+\begin{center}
+Reviews included: $1,225,865$
+Test percentage: $15\%$
+N = $7,749$
+d = $7,023$
+Sparcity = $2.3\%$
 
 \section{Item-Based Collaborative Filtering}
 
