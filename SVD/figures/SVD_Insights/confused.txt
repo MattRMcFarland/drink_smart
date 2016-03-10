@@ -1,0 +1,21 @@
+### REPORT ###
+--- Parameters ---
+# training reviews: 209527, # testing reviews: 52433
+Testing percentage: 0.20
+Users: 3106, Beers: 288
+Sparcity: 0.293
+K = 10
+Convergence threshold: 0.0001
+Learning Rate: 0.05
+Regularization weights -- U: 10.00, V: 10.00
+Centering mode: 5
+Regularization on? -- 1
+Improved mode on? -- 0
+--- Results ---
+Iterations: 500
+Mag of U: 19.2845, Mag of V: 4.0990
+(Pre-Center) Global avg MSE: 0.4203
+(Pre-Center) User avg MSE: 0.3674
+(Pre-Center) Beer avg MSE: 0.3250
+(Pre-Center) Bias Baseline MSE: 0.3064
+Testing error is 0.3049

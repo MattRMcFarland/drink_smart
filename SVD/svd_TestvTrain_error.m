@@ -5,11 +5,11 @@ close all; clear all;
     % 7k_users_800_beers.csv
     % nonnormalized_collected_reviews.csv
     % 7k_nonnormalized_collected_reviews.csv
-    file_str = 'data/nonnormalized_collected_reviews.csv';
+    file_str = 'data/7k_nonnormalized_collected_reviews.csv';
     % graph_str = 'figures/7k_users_800_beers_centered';
 
     % test v. train split
-    test_pcent = .20;    
+    test_pcent = .15;    
     
     % take m least common beers (if -1, take whole set)
     m = -1;
@@ -18,22 +18,23 @@ close all; clear all;
     holdout_users = 10;
     
     % training parameters
-    K = 10;
-    params.max_iterations = 1200;
-    params.threshold = 1e-4; 
-    params.step_size = 1e-2;
+    K = 3;
+    params.max_iterations = 500;
+    params.threshold = 5e-4; 
+    params.step_size = 5e-1;
     params.bias_step_size = 1e-5;
     params.batch_size = 100;
-
+    init_lim = 1.5;             % random initialization limit
+    
     % U and V regularization rates
-    w.k_U = 10;
+    w.k_U = 20;
     w.k_V = 10;
     
     % type of training? Improved (and regularized svd) = 1
     svd_mode = 0;
     
     % apply regularization? 1 if yes, 0 if no
-    regularization_param = 0;
+    regularization_param = 1;
     
     % centering? 
     % 0 -> none 
@@ -74,30 +75,8 @@ holdout_i = randperm(size(X.data,1),holdout_users);
 Xholdout = X.data(holdout_i,:);
 X.data(holdout_i,:) = [];
 
-% get test points
-test_mask = ~isnan(X.data) .* (rand(size(X.data,1),size(X.data,2)) < test_pcent);
-Xtrain = ~test_mask .* X.data;
-Xtrain(test_mask == 1) = NaN;           % mark testing spots as untried
-Xtest = test_mask .* X.data;
-Xtest(~test_mask == 1) = NaN;           % mark training spots as untried
-
-% remove users who don't have both testing and training data
-to_remove_users = (sum(~isnan(Xtrain),2) == 0) | ...
-                       (sum(~isnan(Xtest),2) == 0);
-Xtrain(to_remove_users,:) = [];
-Xtest(to_remove_users,:) = [];
-test_mask(to_remove_users,:) = [];
-fprintf('%d more reviewers were removed b/c they did not have enough test and training reviews.\n',...
-    sum(to_remove_users));
-
-% remove beers that don't have any reviews in training set
-to_remove_beers = (sum(~isnan(Xtrain),1) == 0) | ...
-                  (sum(~isnan(Xtest),1) == 0);
-Xtrain(:,to_remove_beers) = [];
-Xtest(:,to_remove_beers) = [];
-test_mask(:,to_remove_beers) = [];
-fprintf('%d beers were removed because they did not have any training or testing data.\n',...
-    sum(to_remove_beers));
+%% get test points
+[Xtrain, Xtest] = get_test_points(X.data, test_pcent);
 
 %% --- CALCULATE TESTING BASELINE BEFORE CENTERING --- %%
 [precenter_beer_avg_mse, precenter_user_avg_mse, precenter_global_mse, ...
@@ -148,10 +127,14 @@ else                                    % or globally
     Xtest = center_globally(Xtest);
 end
 
+%% Use Cross Validation to find best K given hyper parameters
+% K_vec = [3, 5, 7, 10, 15, 20];
+% [Best_K, errors] = find_best_K(Xtrain, params, w, K_vec)
+% K = Best_K;
+
 %% ---- INITIALIZATION OF U, V, C, D ---- %%
 d = size(Xtrain,2);
 n = size(Xtrain,1); 
-init_lim = .6;
 %initialize the parameter to some small random value     
 svd.U = unifrnd( -init_lim, init_lim, [n, K]); 
 svd.V = unifrnd( -init_lim, init_lim, [d, K]);
@@ -160,7 +143,7 @@ svd.d = unifrnd( -init_lim, init_lim, [1, d]);
 
 %% ---- EXECUTE SVD ---- %%
 params.max_iterations = 5;
-iters = 10;
+iters = 1000;
 training_error = [];
 testing_error = zeros(iters,2);
 total_iterations = 0;
@@ -193,7 +176,7 @@ for i = 1:iters
 %     elseif ((i > 1) && (testing_error(i,2) > testing_error(i-1,2)))
 %         fprintf('stopping because testing error increased\n')
 %         break;
-     end 
+    end 
     fprintf('iteration: %d\n',i);
 end
 
