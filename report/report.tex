@@ -86,7 +86,7 @@ To avoid noise and reduce computational complexity, we only include users who ha
 We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While training, $S$ consists of the training data set. To calculate testing error, we used $S$ as the set of held-out testing data.
 
 % $$ \mathbf{MAE} = \frac{\sum\limits_{i,j \epsilon S} \mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}{\sum\limits_{i,j \epsilon S}\mathbf{\|S\|} $$
-$$ \mathbf{MSE} = \frac{\sum\limits_{i,j \epsilon S} {\mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}^2}{\sum\limits_{i,j \epsilon S}{\mathbf{\|S\|}}^2} $$
+$$ \mathbf{MSE} = \frac{\sum\limits_{i,j \epsilon S} {\mathbf{\|Y^{ij} - \hat{Y}^{ij}\|}}^2}{\sum\limits_{i,j \epsilon S}{\mathbf{\|S\|}}^2} $$
 
 \paragraph{Tools}
 We implemented the data pre-processing and transformation of review list into a user-item interaction matrix with the Pandas library in Python. Item-Based Collaborative Filtering analysis was also done in Python. The Single Value Decomposition analysis was conducted in Matlab.
@@ -107,11 +107,11 @@ We used another baseline predictor used by Simon Funk in the Netflix Prize {\cit
 
 \begin{table}[ht!]
 \centering
-\caption{Results of Baseline Predictions}
+\caption{Results of Mean Predictions}
 \vspace{2mm}
 \begin{tabular}{lllll}
 \hline
-\textbf{Baseline}         & $\mu_{global}$ & $\mu_{user}$ & $\mu_{item}$ & $\mu_{baseline}$ \\ 
+\textbf{Predictor}         & $\mu_{global}$ & $\mu_{user}$ & $\mu_{item}$ & $\mu_{baseline}$ \\ 
 \textbf{MSE}              & $0.4900$       & $0.4193$     & $0.3550$     & $0.3458$         \\ \hline
 \end{tabular}
 \end{table}
@@ -128,17 +128,17 @@ We used another baseline predictor used by Simon Funk in the Netflix Prize {\cit
 \subsection*{Algorithm}
 The goal of the SVD analysis is to decompose $Y$ into a $U$ and $V$ matrix whose product well appoximates $Y$. To find a $U$ and $V$ matrix that approximates $Y$, we minimized the difference between the observed training ratings and the predicted ratings.
 
-$$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|Y_{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
+$$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|Y^{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
 
 Because $Y$ is incomplete, we cannot solve for the closed form solution and thus must use gradient descent to minimize the error function by iteratively updating $U$ and $V$. ($S$ is the set of observed user-item iteractions, and $I$ is the indicator of seen, training ratings for $Y$.)
 
-$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) V_j + w_U U_i$$
+$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (Y^{ij} - U_i V_j^T) V_j + w_U U_i$$
 
 % \begin{center}
 %   In compact matrix form, this is $\frac{\partial E}{\partial U} = -2 * I (Y - U V^T) U + w_U U$
 % \end{center}
 
-$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (Y_{ij} - U_i V_j^T) U_i + w_V V_j$$
+$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (Y^{ij} - U_i V_j^T) U_i + w_V V_j$$
 
 % \begin{center}
 %   In compact matrix form, this is $\frac{\partial E}{\partial V} = -2 * (I (Y - U V^T))^T V + w_V V$
