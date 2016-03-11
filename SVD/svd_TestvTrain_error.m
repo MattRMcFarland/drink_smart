@@ -5,7 +5,7 @@ close all; clear all;
     % 7k_users_800_beers.csv
     % nonnormalized_collected_reviews.csv
     % 7k_nonnormalized_collected_reviews.csv
-    file_str = 'data/7k_nonnormalized_collected_reviews.csv';
+    file_str = 'data/final_dataset.csv';
     % graph_str = 'figures/7k_users_800_beers_centered';
 
     % test v. train split
@@ -234,7 +234,7 @@ title('Testing Error')
 % text(.35*(xlim(2)-xlim(1))+xlim(1),.6*(ylim(2)-ylim(1))+ylim(1),desc_str);
 
 %% ---- CHANGE PRINTED MSE GRAPH NAME HERE ---- %%
-print -dpng 'figures/scratch'
+print -dpng 'figures/Final'
 
 % record baselines (averages
 [test_error, user_err_avgs, user_error_var] = ...
