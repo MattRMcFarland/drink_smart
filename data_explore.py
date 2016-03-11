@@ -181,7 +181,7 @@ if __name__ == "__main__":
     #print("Normalizing all reviews...")
     #ds.normalize_all_reviews()
     print("pivoting reviews to get collected reviews")
-    ds.pivot_reviews(column_name='review_overall', save_to_csv=True, file_name='big1.csv')
+    ds.pivot_reviews(column_name='review_overall', save_to_csv=True, file_name='final_dataset.csv')
 
 
 # END #
