@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 import params as p
+from feature_analyzer import analyze_features
 
 pd.set_option("display.width", 1000)
 pd.set_option("display.max_rows", 500)
+
 
 # Responsible for reading in the input reviews and transform that into the
 # feature vector.
@@ -27,11 +29,18 @@ class FeatureBuilder:
         print("Building the features (user * item) matrix...")
         self.build_features()
 
+        print("Extracting item means and user bias...")
+        self.build_biases()
+
         print("Calculating summary statistics...")
         self.calculate_summary_statistics()
 
         print("Building training and testing features with indicators...")
         self.build_train_test_features()
+
+        if p.ANALYZE_FEATURES:
+            print("Analyzing features...")
+            analyze_features(self.features)
 
     def add_brewery_names(self):
         self.reviews[p.ITEM_ID_COL] = self.reviews["brewery_name"] + " - " + \
@@ -92,6 +101,14 @@ class FeatureBuilder:
         self.train_features = train_features.applymap(replace_zeros)
         self.test_features = test_features.applymap(replace_zeros)
 
+        residual_train_features = self.residual_features.mul(
+            self.train_features_indicator, fill_value=np.nan)
+        residual_test_features = self.residual_features.mul(
+            self.test_features_indicator, fill_value=np.nan)
+
+        self.residual_train_features = residual_train_features.applymap(replace_zeros)
+        self.residual_test_features = residual_test_features.applymap(replace_zeros)
+
     def build_train_test_indicators(self):
         pct_mask = pd.DataFrame(np.random.uniform(
             0, 1,
@@ -103,6 +120,12 @@ class FeatureBuilder:
             lambda x: x < p.TRAIN_PERCENTAGE)
         self.test_features_indicator = pct_mask.applymap(
             lambda x: x > p.TRAIN_PERCENTAGE)
+
+        self.train_features_indicator = self.train_features_indicator.mul(
+            self.features_indicator)
+
+        self.test_features_indicator = self.test_features_indicator.mul(
+            self.features_indicator)
 
     # ---- Normalization ---------------------------------------------------- #
     def normalize_all_reviews(self):
@@ -145,6 +168,30 @@ class FeatureBuilder:
             features.to_csv(p.FEATURE_OUT_FILE)
 
         self.features = features
+
+        self.features_indicator = self.features.applymap(
+            lambda x: not np.isnan(x))
+
+    # ---- Removing Bias ---------------------------------------------------- #
+
+    def build_biases(self):
+        item_totals = self.features.sum(axis=0).values.squeeze()
+        item_rating_counts = self.features_indicator.sum(
+            axis=0)
+        self.item_biases = item_totals / item_rating_counts
+        residual_features = self.features.subtract(
+            self.item_biases, axis=1)
+
+        self.residual_item_biases = self.item_biases - self.item_biases.mean()
+
+        user_totals = residual_features.sum(axis=1).values.squeeze()
+        user_rating_counts = self.features_indicator.sum(
+            axis=1)
+        self.user_biases = user_totals / user_rating_counts
+        self.residual_features = (residual_features.T - self.user_biases).T
+
+        if p.SAVE_RESIDUAL_FEATURES:
+            self.residual_features.to_csv(p.RESIDUAL_FEATURE_OUT_FILE)
 
 if __name__ == "__main__":
     fb = FeatureBuilder()
