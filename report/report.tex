@@ -36,9 +36,9 @@
 \maketitle
 \begin{abstract}
 % TODO
-Using a dataset of beer reviews from \textbf{Beer Advocate}, we attempt to predict a reviewer's scoring of an unencountered beer based on tastes expressed through their previous reviews. We use two collaborative filtering approaches to make predictions: \textbf{Singular Value Decomposition} and \textbf{Item-to-Item Collaborative Filtering}. \\
+Using a dataset of beer reviews from \textbf{Beer Advocate}, we attempt to predict a reviewer's scoring of an unencountered beer based on tastes expressed through their previous reviews. We use two collaborative filtering approaches to make predictions: \textit{Singular Value Decomposition} and \textit{Item-to-Item Collaborative Filtering}. \\
 
-We find that \textbf{Singular Value Decomposition} can generate predicts 2\% better than the average rating baseline predictions. \textbf{Item-to-Item Collaborative Filtering} struggles to reach similar accuracy to the best average-baseline prediction measure. \\
+We find that \textit{Singular Value Decomposition} can generate predicts 2\% better than the average baseline predictions. \textit{Item-to-Item Collaborative Filtering} produces a 1\% improvement compared to the baseline, conditional on limiting the dataset to users that have made many reviews. \\
 \end{abstract}
 
 % Questions for Matt:
@@ -50,25 +50,26 @@ We find that \textbf{Singular Value Decomposition} can generate predicts 2\% bet
 To keep our terminology consistent with existing literature in collaborative filtering, we will take \textit{users} to mean reviewers on Beer Advocate and \textit{items} to mean the beers under review. For a user $i$ and an item $j$, let $Y_{ij}$ and $\hat Y_{ij}$ give the actual and predicted rating of that user on that item, respectively.
 
 \section{Problem}
-We are presented with $\mathbf{Y}$, an $m \times n$ matrix of $n$ users and their ratings of $d$ items. This matrix is sparse, as most users have only rated a small subset of items. We have no other information about the users or items. Our problem can be phrased as: \textbf{given a user $i$ and an item $j$ that user $i$ has not rated, predict $\hat Y_{ij}$}.
+We are presented with $Y$, an $n \times d$ matrix of $n$ users and their ratings of $d$ beers. This matrix contains no other information about the users or beers and is very sparse, as most users have only rated a small subset of items. Our problem can be phrased as: \textbf{given a user $i$ and an beer $j$ that user $i$ has not rated, compute $\hat Y_{ij}$}.
 
-\paragraph{Collaborative Filtering} We use collaborative filtering to predict how a user will score a beer.  Scores are predicted based on how the rest of the user population rated beers similiar to the beers in the target user's history. Collaborative Filtering more accurately predicts new user-item interactions by having a large library of historical ratings to use as similarity references. 
+%\paragraph{Collaborative Filtering} 
+We use item-based collaborative filtering and single value decomposition to predict how a user will score a beer. These approaches predict review scores based on other user-item interactions in the dataset known to be similar to the target user and item. The accuracy of these prediction algorithms depends on having a large library of historical ratings to use as similarity references {\cite{sarwar}}.
 
 %Given the lack of feature information (categorization of items, demographics of users, etc.), we cannot rely on supervised learning techniques. We thus turn to unsupervised methods and collaborative filtering, in particular. Collaborative Filtering techniques attempt to establish similarities in user preferences for certain items based on observed user-item interactions. Predicted ratings rise when a user favorably rates items similar to the predicted item.
 
-\paragraph{Training} Our prediction for unseen user-item interactions depends on identifying similiar items to the target item. To establish item similarities for Item-Based Collaborative Filtering, we constructed a similiarity correlation matrix between all pairings of items. In the Single Value Decomposition Analysis, the decomposition of the user-item matrix reduces the feature dimensions of the item space into most-similar basis vectors. 
+%\paragraph{Training} Our prediction for unseen user-item interactions depends on identifying similiar items to the target item. To establish item similarities for Item-Based Collaborative Filtering, we constructed a similiarity correlation matrix between all pairings of items. In the Single Value Decomposition Analysis, the decomposition of the user-item matrix reduces the feature dimensions of the item space into most-similar basis vectors.
 
 %This process first requires establishing which items are similar to each other. Intuitively, if a user rates two items in the same fashion (both poorly or both well), then they are similar. If the user rates them oppositely, they are dissimilar. In our SVD analysis, we establish a set of latent features describing items that are similar in some respect, as determined by user preferences. For Item-Based Collaborative Filtering, we generate a correlation matrix that describes the similarity between all pairings of items.
 
 %\paragraph{Prediction} Intuitively, if a user favorably rates item $A$, which is quite similar to an unrated item $B$, we expect the user to favorably rate item $B$. In the prediction stage, we make use of the user's provided ratings to make inferences about an unkown rating. In SVD analysis, we can predict the score of an unreviewed item by finding the product of that user's latent feature vector multiplied by that item's latent feature vector.
 
 \section{Data}
-Our dataset contains $1,586,599$ reviews concerning $m = 33,388$ users and $n = 65,680$ items. Each review contains a rating on a scale from $0$ to $5$ by intervals of $.5$. It also provides ratings in several other metrics (palate, taste, appearance, aroma) and information about the beer itself (brewery, style, ABV). For more information about the raw dataset, see the Appendix. We limit our analysis to predicting the primary rating (``overall review'').
+Our dataset contains $1,586,599$ reviews concerning $m = 33,388$ users and $n = 65,680$ beers. Each review contains a primary rating on a scale from $0$ to $5$ by intervals of $.5$. It also provides ratings in several other metrics (palate, taste, appearance, aroma) and information about the beer itself (brewery, style, ABV). For more information about the raw dataset, see the Appendix. We limit our analysis to predicting the primary rating (``overall review'').
 
-%Each review contains a rating on a scale from $0$ to $5$ by intervals of $\frac{1}{2}$. It also provides user rating along several other metrics (palate, taste, appearance, aroma) as well as some information about the item itself (brewery, style, alcohol by volume). 
+%Each review contains a rating on a scale from $0$ to $5$ by intervals of $\frac{1}{2}$. It also provides user rating along several other metrics (palate, taste, appearance, aroma) as well as some information about the item itself (brewery, style, alcohol by volume).
 
 \paragraph{Pre-Processing}
-The dataset is comprised by a long list of ratings, where each row represents one user's rating of one item. To generate our user-by-item matrix $Y$, we rearranged these reviews into an $n$ by $d$ matrix, where each row represents a user and each column represents a beer in the catalog. The intersection between a user and a beer contains that user's review score of that beer if available. 
+The dataset is comprised by a long list of ratings, where each row represents one user's rating of one beer. To generate our user-by-beer matrix $Y$, we rearranged these reviews into an $n$ by $d$ matrix, where each row represents a user and each column represents a beer in the catalog. The intersection between a user and a beer contains that user's review score of that beer if available.
 
 To avoid noise and reduce computational complexity, we only include users who have reviewed at least 5 beers and beers that have at least 50 reviews. This leaves us with approximately $5,000$ items and $13,000$ users, where the resulting matrix is 1.8\% filled (but still represents the bulk of the data set with more than 1.2 million reviews included).
 
@@ -80,13 +81,13 @@ To avoid noise and reduce computational complexity, we only include users who ha
 
 %We derive the $\mu$ terms in our baseline algorithm. Intuitively, $\mathbf{\bar X}$ represents the residual of a rating that is not explained by the item's average (its ``quality'') and the user's rating tendencies.
 
-\paragraph{Splitting Testing and Training Data} To partition the dataset into testing and training segments, we uniformly separated out a percentage (15\% - 20\%) of all observed user-item interactions and held those points from the training process. Our prediction models trained on the remaining set of reviews. We used the held-out set of testing data points to evaluate the predictive power of the model.
+\paragraph{Splitting Testing and Training Data} To partition the dataset into testing and training segments, we randomly separated out a percentage (15\% - 20\%) of all observed ratings and held those points from the training process. Our prediction models trained on the remaining set of reviews. We used the held-out set of testing data points to evaluate the predictive power of the trained model.
 
 \paragraph{Error Measurement}
 We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While training, $S$ consists of the training data set. To calculate testing error, we used $S$ as the set of held-out testing data.
 
 % $$ \mathbf{MAE} = \frac{\sum\limits_{i,j \epsilon S} \mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}{\sum\limits_{i,j \epsilon S}\mathbf{\|S\|} $$
-$$ \mathbf{MSE} = \frac{\sum\limits_{i,j \epsilon S} {\mathbf{\|Y^{ij} - \hat{Y}^{ij}\|}}^2}{\sum\limits_{i,j \epsilon S}{\mathbf{\|S\|}}^2} $$
+$$ \mathbf{MSE} = \frac{\sum\limits_{i,j \in S} {\mathbf{|Y_{ij} - \hat{Y}_{ij}|}}^2}{{\mathbf{|S|}}^2} $$
 
 \paragraph{Tools}
 We implemented the data pre-processing and transformation of review list into a user-item interaction matrix with the Pandas library in Python. Item-Based Collaborative Filtering analysis was also done in Python. The Single Value Decomposition analysis was conducted in Matlab.
@@ -95,15 +96,18 @@ We implemented the data pre-processing and transformation of review list into a 
 We use three methods to make predictions:
 
 \begin{enumerate}
-  \item \textbf{Baseline}: use rating means rather than machine learning approaches to establish a baseline prediction against which we can compare our more advanced approaches.
+  \item \textbf{Baseline}: uses four types of rating means to establish baseline predictions against which we can compare our more advanced approaches.
   \item \textbf{Singular Value Decomposition}: uses feature reduction to expose principle features in the items and user preferences.
-  \item \textbf{Item-Based Collaborative Filtering}: uses a correlation matrix comparing all pairs of items and predicts based on ratings of similar items
+  \item \textbf{Item-Based Collaborative Filtering}: uses a pairwise correlation matrix of items and predicts based on ratings of similar items
 \end{enumerate}
 
 \section{Baseline Predictors}
-To establish a threshold of success for our algorithms, We first calculate a series of average baselines. The most basic predictor consists of predicting the global average rating $\mu_{global}$. Predicting the user's average rating $\mu_{user}$ and beer's average score $\mu_{item}$ are two other basic predictors.
+To establish a threshold of success for our algorithms, we first calculate a series of average baselines. The most basic predictor consists of predicting the global average rating $\mu_{global}$. Predicting the user's average rating $\mu_{user}$ and beer's average score $\mu_{item}$ are two other basic predictors.
 
-We used another baseline predictor used by Simon Funk in the Netflix Prize {\cite{Funk}}. First, we calculate the mean for each item ($\mu_{item}$). \textit{After} subtracting $\mu_{item}$ (each beer's average) from $Y$, we calculate the mean bias ($\mu_{bias}$) for each user above or below the beer average. We then subtract the user bias from each row, reducing $Y$ to residuals. We form the predicted rating $\hat{Y}^{ij}_{baseline}$ for user $i$ on item $j$ by calculating: $\hat{Y}^{ij}_{baseline} = \mu_{bias_i} + \mu_{item_j}$. The accuracy of these baseline predictors are included below.
+Additionally, we implemented a baseline predictor used by Simon Funk in the Netflix Prize.\textsuperscript{\cite{Funk}} First, we calculate the mean for each item ($\mu_{item}$) for each column $j$. \textit{After} subtracting $\mu_{item}$ (each beer's average) from $Y$, we calculate the mean bias ($\mu_{bias}$) for each user above or below the beer average by averaging across row $i$. We then construct ${\mu}_{baseline_{ij}} = \mu_{bias_i} + \mu_{item_j}$ and use $\mu_{baseline_{ij}}$ as the predictor as $\hat{Y}_{ij}$.
+
+%We then subtract the user bias from each row, reducing $Y$ to residuals. We form the predicted rating $\hat{Y}_{baseline_{ij}}$ for user $i$ on item $j$ by calculating:
+%$$\hat{Y}_{baseline_{ij}} = {\mu}_{baseline_{ij}} = \mu_{bias_i} + \mu_{item_j}$$ 
 
 \begin{table}[ht!]
 \centering
@@ -116,44 +120,55 @@ We used another baseline predictor used by Simon Funk in the Netflix Prize {\cit
 \end{tabular}
 \end{table}
 
+Because ${\mu}_{baseline}$ performs the best out of these baseline predictors, we will compare the predictive success of our machine learning algorithms against the error of this baseline.
+
 \section{Singular Value Decomposition}
-\paragraph{Theoretical Basis} Single Value Decomposition factors an $n$ by $d$ matrix $Y$ into approximation matrices $U * \Sigma * V^{T}$, where $U$ is $n$ by $K$ and $V$ is $d$ by $K$. In our case, $Y$ is a large, sparse matrix of user-item interactions, and we can simplify the features of $Y$ by finding the primary latent features in $U$ and $V$ (where $\Sigma$ is a diagonal matrix multiplied into $U$ and $V$) for the $K$ largest eigenvectors. These latent features expose the directions of greatest variation, allowing us to identify items and users that are most similar in our dataset and build predictions based off of those similarities.
+%\paragraph{Theoretical Basis} Single Value Decomposition factors an $n$ by $d$ matrix $Y$ into approximation matrices $U * \Sigma * V^{T}$, where $U$ is $n$ by $k$ and $V$ is $d$ by $j$. In our case, $Y$ is a large, sparse matrix of user-item interactions, and we can simplify the features of $Y$ by finding the primary latent features in $U$ and $V$ (where $\Sigma$ is a diagonal matrix multiplied into $U$ and $V$) for the $k$ largest eigenvectors. These latent features expose the directions of greatest variation, allowing us to identify items and users that are most similar in our dataset and build predictions based off of those similarities.
 
 %\paragraph{Theoretical Basis} Single Value Decomposition is a form of Principal Component Analysis, which factors a matrix $Y$ into component matrices $U * \Sigma * V^{T}$. Principal Component Analysis alters the basis of $Y$ so that, in the factorized form, the directions of greatest variance are exposed in decreasing order. In our dataset, $Y$ represents the user-item interaction matrix, and when we decompose that matrix to constituent parts $U$ and $V$, we will find the eigenvectors of $Y$ that define the directions of greatest variance. Single Value Decomposition limits the factorization to the $K$ most significant eigenvectors. Because $Y$ is very large, but very sparse, we can simplify the data by factoring to $U$ and $V$. Where $U$ is a $n$ by $k$ matrix where each row represents a latent feature vector for a user, and $V$ is a $d$ by $K$ matrix where each row represents the latent feature vector for an item. These latent feature vectors are meaningful because, given an incomplete $Y$ matrix (where not all user-item interactions are accounted for), we can iteratively train $U$ and $V$ to approximate the data we do have for $Y$. New user-item interactions (ratings) are predicted with $\hat{Y}_{ij} = U_{i}V_{j}^{T}$.
 
-\paragraph{Previous Work} Single Value Decomposition has been used as a prediction mechanism for user-item interactions very successfully before, most famously in the famous Netflix Prize.\textsuperscript{\cite{gower}} Complex approaches, such as adaptively altering the hyperparameters or incorporating time-sensitivity to a user's history, have been attempted to maximize the accuracy of predictions.\textsuperscript{\cite{ma}}\textsuperscript{\cite{gower}} We will attempt to adapt and apply some basic, successful techniques to our dataset.
+%\paragraph{Previous Work} Single Value Decomposition has been used as a prediction mechanism for user-item interactions very successfully before, most famously in the Netflix Prize.\textsuperscript{\cite{gower}} Complex approaches, such as adaptively altering parameters like learning rate or incorporating time-sensitivity to a user's history, have been attempted to maximize the accuracy of predictions.\textsuperscript{\cite{ma}}\textsuperscript{\cite{gower}} We will attempt to adapt and apply some basic, successful techniques to our dataset.
 
 %\paragraph{Literature Review} Single Value Decomposition as a technique to simplify a large, sparse user-interaction matrix has been used very successfully before, most famously in the famous Netflix Prize\textsuperscript{\cite{gower}}. Studies on the application of SVD to decompose a matrix has revealed several variants on the basic algorithm to increase the accuracy of the predictions. Such methods include adaptively altering the learning rate, changing the iterative update method, and adding regularization\textsuperscript{\cite{ma}}. Other have also added different normalization constants to the SVD analysis to account for quality and user biases\textsuperscript{\cite{paterek}}. Simon Funk, a famous contestant in the Netflix algorithm further tuned the bias weights based on the number of reviews an item or user had \textbf{\cite{Funk}}. Gower explains that successful Netflix SVD algorithms also incorporated time-based information about the user to increase the prediction's accuracy\textsuperscript{\cite{gower}}. The SVD method has been explored extensively, and we will attempt to replicate some of the most successful methods on our dataset.
 
 \subsection*{Algorithm}
-The goal of the SVD analysis is to decompose $Y$ into a $U$ and $V$ matrix whose product well appoximates $Y$. To find a $U$ and $V$ matrix that approximates $Y$, we minimized the difference between the observed training ratings and the predicted ratings.
+\paragraph{Training} The goal of the SVD analysis is to factor $Y$ into $U$ ($n \times k$) and $V$ ($d \times k)$ matrices whose product ($U V^T$) well appoximates $Y$, and where $k$ is the number of $Y$'s largest eigenvalues incorporated into $U$ and $V$. 
 
-$$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|Y^{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
+To maximize the potential predictive power of this approach, we fit $U$ and $V$ to the residuals of the training data (matrix $R$) after subtracting the $Y_{baseline}$ prediction from $Y$.
 
-Because $Y$ is incomplete, we cannot solve for the closed form solution and thus must use gradient descent to minimize the error function by iteratively updating $U$ and $V$. ($S$ is the set of observed user-item iteractions, and $I$ is the indicator of seen, training ratings for $Y$.)
+ $$ R_{ij} = Y_{ij} - Y_{baseline_{ij}} $$
 
-$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (Y^{ij} - U_i V_j^T) V_j + w_U U_i$$
+ By centering the data on $Y_{baseline}$, we can regularize our predictive error function to avoid overfitting. (Fitting $U$ and $V$ to non-centered data took far longer to train and produced less accurate results. See TODO cite figure in appendix.) To find a $U$ and $V$ matrix that approximates $R$, we minimized the difference between the observed training residuals and the predicted residuals.
+
+$$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|R_{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
+
+Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. $S$ is a set of observed beer ratings, and $I$ is the indicator of $S$.
+
+$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) V_j + w_U U_i$$
 
 % \begin{center}
 %   In compact matrix form, this is $\frac{\partial E}{\partial U} = -2 * I (Y - U V^T) U + w_U U$
 % \end{center}
 
-$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (Y^{ij} - U_i V_j^T) U_i + w_V V_j$$
+$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) U_i + w_V V_j$$
 
 % \begin{center}
 %   In compact matrix form, this is $\frac{\partial E}{\partial V} = -2 * (I (Y - U V^T))^T V + w_V V$
 % \end{center}
 
-Where $U$ and $V$ were updated with schotastic gradient descent (and where $\mu$ is the learning rate / step size). This iterative update process continued until the training error started to increase. 
+Where $U$ and $V$ were updated with schotastic gradient descent (and where $\lambda$ is the learning rate / step size). While training $U$ and $V$, this update process continued until the error started to increase.
 
 \begin{center}
-$ U_{i+1} = U - \mu * \frac{\partial E}{\partial U}$ \hspace{2cm} $V_{i+1} = V - \mu * \frac{\partial E}{\partial V}$
+$ U_{i+1} = U - \lambda * \frac{\partial E}{\partial U}$ \hspace{2cm} $V_{i+1} = V - \lambda * \frac{\partial E}{\partial V}$
 \end{center}
 
-To maximize the potential predictive power of this approach, we fit $U$ and $V$ to predict the residuals of the training data after subtracting the $Y_{baseline}$ prediction. We build a prediction for user $i$ and item $j$ by adding the baseline predictor and the residual prediction: $\hat{Y}^{ij} = Y_{baseline}^{ij} + U_i V_j$. We evaluated the testing error based on the difference between the review baseline residual and the predicted residual.
+\paragraph{Prediction} To predict a residual for user $i$ and beer $j$, we take the product of $U_i$ and $V_j^T$. By adding the baseline prediction to the predicted residual, we get the overall predicted score.
+
+$$ \hat{Y}_{ij} = Y_{baseline_{ij}} + \hat{R}_{ij} = Y_{baseline_{ij}} + U_i V_j^T $$
+
 
 \subsection*{Hyper-Parameter Tuning}
-The SVD prediction required four hyperparameters: The learning rate ($\mu$), the regularization weights for $U$ ($w_U$) and $V$ ($w_V$), and $K$ which determines the number of eigenvectors $U$ and $V$ include. In each training run, we selected the largest learning rate possible without causing divergence (varying from $0.5$ to $.001$). Because cross-validate testing among the remaining three hyper parameters would be too time intensive, we opted to select the regularization weights $w_U = 20.0$ and $w_V = 10.0$; such large values helped prevent overtraining. Having decided on a non-divergent $\mu$ and weights $w_U$ and $w_V$, we then executed a form of cross validation to find the best $K$. \\
+The SVD prediction required four hyperparameters: The learning rate ($\mu$), the regularization weights for $U$ ($w_U$) and $V$ ($w_V$), and $k$ which determines the number of eigenvectors $U$ and $V$ include. In each training run, we selected the $\lambda$ possible without causing divergence (varying from $0.5$ to $.001$). Because cross-validate testing among the remaining three hyper parameters would be too time intensive, we opted to select the regularization weights $w_U = 20.0$ and $w_V = 10.0$; such large values helped prevent overtraining. Having decided on a non-divergent $\mu$ and weights $w_U$ and $w_V$, we then executed a form of cross validation to find the best $k$.
 
 \begin{table}[ht!]
 \centering
@@ -161,55 +176,98 @@ The SVD prediction required four hyperparameters: The learning rate ($\mu$), the
 \vspace{2mm}
 \begin{tabular}{lllllll}
 \hline
-\textbf{K}              & 3          & 5             & 7             & 10        & 15        & 20 \\ 
+\textbf{k}              & 3          & 5             & 7             & 10        & 15        & 20 \\
 \textbf{Avg MSE}        & $0.3084$   & $0.3103$      & $0.3110$      & $0.3116$  & $0.3124$  & $0.3148$\\ \hline
 \end{tabular}
 \end{table}
 
-The Avg MSE is the averaged MSE of the three validation tests for the given $K$. In the validation test, 20\% of the training data was randomly partitioned into a validation set. SVD trained on the remaining portion of the training set, and validation error was calculated with the found $U$ and $V$ on the validation data. Note: We cross validated on a smaller subet of the dataset ($7,000$ users and $800$ items) because the full dataset would have been too computationally intensive for such analysis.\\
+The Avg MSE is the averaged MSE of the three validation tests for the given $K$. In the validation test, 20\% of the training data was randomly partitioned into a validation set. SVD trained on the remaining portion of the training set, and validation error was calculated with the found $U$ and $V$ on the validation data. Note: We cross validated on a smaller subet of the dataset ($7,000$ users and $800$ items) because using the full dataset would have been too computationally intensive for such analysis.\\
 
  Cross validation results showed that a small $K = 3$ generated the lowest average MSE. \\
 
 \subsection*{SVD Results}
+Initially, we tried to fit $U$ and $V$ to the raw scores instead of to the residuals (with the found best $k = 3$). Using the product of the trained $U_i$ and $V_j$ as the predicted score $\hat Y_{ij}$ produced a testing error of $0.4584$ which was unacceptably higher than the best baseline. \\
+%(See Figure \ref{fig:non_centered_unregularized} in the Appendix).
 
-After determining the best $K = 3$, regularization weights $w_U = 20.0$ and $w_K = 10.0$, and learning rate $\mu = .5$, we trained the SVD on the full dataset of review residuals (reserving 15\% of the data as testing data). We were able to realize an MSE of $0.3375$ which represented an improvement of $2.4\%$ over the bias baseline predictor (MSE of $0.3458$).
+To improve performance, we altered our training algorithm to fit $U$ and $V$ to the residual matrix $R$, and summed the predicted residual and predicted baseline to get the review prediction. Using the found best $k = 3$, regularization weights $w_U = 20.0$ and $w_K = 10.0$, and learning rate $\mu = .5$, we trained the SVD on the full dataset of review residuals (reserving 15\% of the data as testing data). We were able to realize an MSE of $0.3375$ which represented an improvement of $2.4\%$ over the bias baseline predictor (MSE of $0.3458$).
 
 \begin{figure}[!ht]
 \begin{center}
-\caption{SVD Prediction Results}
-    \includegraphics[width=.7\textwidth]{"./figures/final".jpg}
+\caption{SVD Best Prediction Results}
+    \includegraphics[width=.85\textwidth]{"./figures/final".jpg}
 \end{center}
 \end{figure}
 
-\section*{Item-Based Collaborative Filtering}
+\section{Item-Based Collaborative Filtering}
 
 \subsection*{Algorithm}
-\paragraph{Training} For this method, we similarly begin from our residual feature matrix $\mathbf{\bar X}$. We generate an $n \times n$ correlation matrix $\mathbf{C}$. The entry $\mathbf{C}_{ij}$ describes the similarity of ratings between items $i$ and $j$. If a particular user reviews both items $i$ and $j$ favorably, the similarity increases. If the user reviews both poorly, the similarity also increases. If the user rates one postively and the other negatively, the similarity decreases. We use the Pearson Product-Moment Correlation to determine these similarity scores, which fall in the range $[-1, 1]$.
+\paragraph{Training} For this method, we also from the residual set of ratings of $R$, where the user and item biases have been removed. We generate an $d \times d$ correlation matrix $C$ from $R$. The entry ${C}_{ij}$ describes the similarity of residuals between items $i$ and $j$. We use the Pearson Correlation to determine these similarity scores, which fall in the range $[-1, 1]$.
 
-Our prediction step requires knowing which items are ``similar'' to each other. We must discretize $\mathbf{C}$ such that correlation scores above a certain threshold $s^*$ are considered ``similar''. By applying this threshold to all entries in $\mathbf{C}$, we generate an $n \times n$ matrix $\mathbf{S}$, where:
+% If users rate beers $i$ and $j$ consistently well or poorly, the similarity increases. If users rate one postively and the other negatively, the similarity decreases.
+
+Our prediction step requires knowing which items should be considered ``similar'' enough to each other to use as a basis for a prediction. We must discretize ${C}$ such that correlation scores above a certain threshold $s^*$ are considered ``similar''.\textsuperscript{\cite{sarwar}} By applying this threshold to all entries in ${C}$, we generate an $d \times d$ matrix ${S}$, where:
 
 $$
 \mathbf{S}_{ij} =
 \begin{cases}
-    \hfill 1    \hfill & \text{ if items $i$ and $j$ are similar} \\
+    \hfill 1    \hfill & \text{ if items $i$ and $j$ are similar ($C_{ij} > s^*$)} \\
     \hfill 0    \hfill & \text{ otherwise} \\
 \end{cases}
 $$
 
-\paragraph{Prediction} Armed with the similarity matrix $\mathbf{S}$, we can make predictions. For a given user $i$, we wish to predict their rating on an item $j$ that they have not yet rated, given their past ratings. Letting $S$ be a set of items similar to the predicted item $j$ that the user has also rated, We predict $\hat y_{ij}$, where:
+\paragraph{Prediction} Armed with the similarity matrix ${S}$, we can make predictions. For a given user $i$, we wish to predict his rating on an item $j$ that he has not yet rated, given his past ratings. Letting $S$ be a set of items similar to the predicted item $j$ that the user has also rated, We predict $\hat Y_{ij}$, where:
 
-$$ \hat y_{ij} = \mu_{user_i} + \mu_{item_j} + \frac{\sum_{s \in S} \mathbf{\bar X_{is}}}{\sum_{s \in S} 1 }$$
+$$ \hat Y_{ij} = \mu_{baseline_{ij}} + \frac{\sum\limits_{s \in S} Y_{is}}{|S|}$$
 
-We predict our baseline plus an item-based collaborative filtering term. This term sums the users ratings for items similar to $j$ and divides by the number of similar items that the user has rated (takes an average).
+We predict our baseline plus an item-based collaborative filtering term.\textsuperscript{\cite{gower}} This term sums the users ratings for items similar to $j$ and divides by the number of similar items that the user has rated (takes an average).
 
 \subsection*{Hyper-Parameter Tuning}
-This algorithm requires setting a threshold $s^*$ to discretize whether or not items are similar to each other. We first explore how tuning $s^*$ impacts our results in terms of Mean-Squared Error.
+Item-Based Collaborative Filtering requires setting $s^*$ to a threshold to determine whether two items are similar or not. If Figure \ref{fig:similarity_tuning}, we calculate the prediction error for various similarity thresholds. We observe that this algorithm has the lowest prediction error where $s^* = 0$. As the $s^*$ increases, we have fewer similiar items from which to generate the collaborative filtering term, leading to greater variation in the ``average of similar items''. Even though non-correlated items are viewed as ``similar'' when $s^* = 0$, our results improve on the best baseline by removing all \textit{dissimilar} items from the comparison.
+
+\begin{figure}[!ht]
+\centering
+    \includegraphics[width=.7\textwidth]{"./images/similarity_tuning".png}
+    \caption{Prediction Error for Similarity Thresholds}
+    \label{fig:similarity_tuning}
+\end{figure}
 
 \subsection*{Item Based Collaborative Filtering Results}
 
-\section*{Comparison of Methods}
+Given the dependency of Item-Based Collaborative Filtering on a user's ratings of similar items, we run the algorithm against two datasets. The first dataset is consistent with our approach in SVD, and considers items with at least 50 ratings and users that have given at least 5 ratings. Under these conditions, we cannot with any regularity beat the baseline.
 
-\section*{Next Steps}
+In the second data set, we restrict the second dataset to users that have made at least 500 ratings (with the same item requirement of 50 ratings). With this restriction in place, we find a modest 1\% improvement compared to our baseline.
+
+\begin{table}[ht!]
+\centering
+\caption{Item-Based Collaborative Filtering Results}
+\label{my-label}
+\begin{tabular}{lllll}
+\hline
+                        & Baseline (Test) & CF (Test) & Baseline (Train) & CF (Train) \\ \hline
+Unrestricted Data     & 0.3629             & 0.3440                  & 0.3304              & 0.2359                   \\
+User Restricted Data  & 0.3045             & 0.3011                  & 0.3042              & 0.1918                   \\ \hline
+\end{tabular}
+\end{table}
+
+When the feature matrix is denser (as in the user restricted dataset), our collaborative filtering approach strengthens relative to the baseline. There is a greater chance that any given item is both similar to the current predicted item \textit{and} the user has rated that similar item.
+
+We also do note from testing our method against the training set that the collaborative filtering approach yields results that are significantly better than the baseline, suggesting a degree of overfitting. Regularization of the similarity matrix might alleviate the overfitting issue.
+
+\section{Comparison of Methods}
+We have demonstrated how both SVD and item-based collaborative filtering result in modest improvements compared to the best baseline prediction. Given how little variance exists in the distribution of reviews (see the Appendix section of data characterization), we consider any improvement on the best baseline to be a success. Comparing the two prediction methods against one another, we find SVD advantageous due to its feature reduction principle.
+
+In SVD, we expose latent features that group the items along certain unkown criteria based on correlations in user ratings. By simplifying items and users into similar groups, we dimensionally reduce the enormity of the beer catalog and user population to a few stereotypes that illuminate common traits between beers and users.
+
+Oppositely, item-based collaborative filtering relies only on direct comparisons between two items. Given that the number of pairings grows with the square of the number of items, we require a vast number of comparisons to make meaningful observations about the similarity of the two items.
+
+Further, in the prediction stage, item-based filtering only takes advantage of knowledge drawn from ``similar'' items. However, knowing a user's opinion of \textit{dissimilar} items could be useful as well. If a user likes a dissimilar item, we may infer the user will dislike the predicted item. 
+
+So while both methods can contribute to more accurate predictions beyond the best baseline, SVD is superior in its ability to find defining common traits among users and beers whereas item based collaborative filtering can only examine items known to be similar to each other.
+
+In futher exploration, it would be interesting to see how SVD and item-based collaborative filtering could be used to augment one another's predictions in an ensemble prediction. Understanding where each method is uniquely strong and weak would show how to ocmbine the metho
+
+\section{Contributions}
+Matt implemented SVD algorithm and worked with Matlab. Ted focused on pre-processing features in Python and explored the item-based collaborative filtering approach. We each wrote the sections of the report that are relevant to our respective algorithms. Ted drafted opening and closing remarks, edited and finalized by Matt.
 
 \begin{thebibliography}{9}
 
@@ -225,11 +283,14 @@ Ma, Chih-Chao. ``A Guide to Singular Value Decomposition for Collaborative Filte
 \bibitem{paterek}
 Paterek, Arkadiusz. ``Improving Regularized Singular Value Decomposition for Collaborative Filtering.'' Institute of Informatics, Warsaw University. Web. 12 Aug. 2007.
 
+\bibitem{sarwar}
+Sarwar, Badrul, George Karypis, Joseph Konstan, and John Reidl. ``Item-based Collaborative Filtering Recommendation Algorithms.'' Proceedings of the Tenth International Conference on World Wide Web - WWW '01 (2001): n. pag. Web.
+
 \end{thebibliography}
 
 \newpage
 \begin{appendices}
-\section*{Dataset Characterization}
+\section{Dataset Characterization}
 
     \begin{figure}[!ht]
     \begin{center}
@@ -273,6 +334,17 @@ Paterek, Arkadiusz. ``Improving Regularized Singular Value Decomposition for Col
       \includegraphics[width=0.95\linewidth]{"./images/user_hist".png}
     \end{minipage}
     \end{figure}
+
+% \clearpage
+% \section*{SVD Results}
+%     \begin{figure}[!ht]
+%     \begin{center}
+%     \caption{SVD Performance on Uncentered Data}
+%         \includegraphics[width=.8\textwidth]{"./figures/non_centered_unregularized".jpg}
+%         \label{fig:non_centered_unregularized}
+%     \end{center}
+%     \end{figure}
+
 
 \end{appendices}
 \end{document}

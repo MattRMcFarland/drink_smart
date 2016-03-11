@@ -1,76 +1,73 @@
-import matplotlib
 import numpy as np
-matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
-from feature_builder import FeatureBuilder
+import params as p
+from predictor import Predictor
 
-IMAGE_OUTPUT_DIR = "./item_cf/images/"
+
+def simulate_similarity_threshold():
+    sim_thresholds = np.arange(-0.0, 0.30, 0.02)
+    p.PREDICT_BASE_SIM_ONLY = True
+
+    results = []
+
+    for threshold in sim_thresholds:
+
+        p.SIMILARITY_THRESHOLD = threshold
+        predictor = Predictor()
+        result = predictor.predict_all()
+
+        results.append(result)
+
+    plt.plot(sim_thresholds, results)
+    plt.title("Similarity Threshold Tuning")
+    plt.xlabel("Similarity Threshold")
+    plt.ylabel("MSE for Baseline + Similarity")
+    plt.savefig(p.SIMILARITY_TUNING_FILE_OUT)
 
 
-class Simulator:
+    #     output_file = p.IMAGE_OUTPUT_DIR + "sim_threshold.png"
 
-    def __init__(self):
-        self.fb = FeatureBuilder()
+    #     func = self.fb.train_and_predict
+    #     key_args = {
+    #         "train_percentage": 0.9,
+    #         "split_on_reviews": True
+    #     }
 
-    def load(self):
-        print("---- Overall Dataset ----------")
-        self.fb.calculate_summary_statistics()
-        self.fb.filter_on_beer_reviewer_counts(800, 200)
-        print("---- Filtered Datset --------- ")
-        self.fb.calculate_summary_statistics()
-        print("Similarity matrix written")
+    #     return self.simulate_1D(func, key_args, "sim_threshold", sim_thresholds, output_file)
 
-    def simulate_similarity_threshold(self):
-        sim_thresholds = np.arange(0.0, 0.35, 0.05)
-        output_file = IMAGE_OUTPUT_DIR + "sim_threshold.png"
+    # def simulate_1D(self, func, key_args, name, options, output_file, args=[], plot=True):
 
-        func = self.fb.train_and_predict
-        key_args = {
-            "train_percentage": 0.9,
-            "split_on_reviews": True
-        }
+    #     results = []
 
-        return self.simulate_1D(func, key_args, "sim_threshold", sim_thresholds, output_file)
+    #     for option in options:
+    #         key_args[name] = option
+    #         result = func(*args, **key_args)
+    #         results.append(result)
 
-    def simulate_1D(self, func, key_args, name, options, output_file, args=[], plot=True):
 
-        results = []
+    #     return results
 
-        for option in options:
-            key_args[name] = option
-            result = func(*args, **key_args)
-            results.append(result)
+    # def simulate_2D(self, func, first_name, first_options, second_name, second_options, args=[]):
 
-        plt.plot(options, results)
-        plt.xlabel(name)
-        plt.ylabel("Result")
-        plt.savefig(output_file)
+    #     results = []
 
-        return results
+    #     for first_option in first_options:
 
-    def simulate_2D(self, func, first_name, first_options, second_name, second_options, args=[]):
+    #         result_row = []
 
-        results = []
+    #         for second_option in second_options:
 
-        for first_option in first_options:
+    #             kwargs = {
+    #                 first_name: first_option,
+    #                 second_name: second_option
+    #             }
 
-            result_row = []
+    #             result = func(*args, **kwargs)
+    #             result_row.append(result)
 
-            for second_option in second_options:
-
-                kwargs = {
-                    first_name: first_option,
-                    second_name: second_option
-                }
-
-                result = func(*args, **kwargs)
-                result_row.append(result)
-
-            results.append(result_row)
+    #         results.append(result_row)
 
 if __name__ == "__main__":
-    sim = Simulator()
-    sim.load()
-    sim.simulate_similarity_threshold()
+    simulate_similarity_threshold()
 
 # END #

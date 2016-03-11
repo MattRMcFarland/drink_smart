@@ -48,7 +48,7 @@ for iter = 1:params.max_iterations
        
     % threshold = 1e-3;
     % stopping criterion
-    % condition to stop when descent threshold is reached: 
+    % Go until error increases: 
     % length(mse) > 1 && max(abs(mse(end) - mse(end-1))) < params.threshold)
     if ( length(mse) > 1 && (mse(end) - mse(end-1) > 0) )
         fprintf('svd_train: reached stopping threshold at iteration %d for with MSE %.4G\n',...

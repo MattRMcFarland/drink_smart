@@ -15,13 +15,13 @@ close all; clear all;
     m = -1;
     
     % holdout_users will be used for new user prediction
-    holdout_users = 10;
+    holdout_users = 0;
     
     % training parameters
     K = 3;
     params.max_iterations = 500;
     params.threshold = 5e-4; 
-    params.step_size = 5e-1;
+    params.step_size = 1e-2;
     params.bias_step_size = 1e-5;
     params.batch_size = 100;
     init_lim = 1.5;             % random initialization limit
@@ -34,7 +34,7 @@ close all; clear all;
     svd_mode = 0;
     
     % apply regularization? 1 if yes, 0 if no
-    regularization_param = 1;
+    regularization_param = 0;
     
     % centering? 
     % 0 -> none 
@@ -44,7 +44,7 @@ close all; clear all;
     % 4 -> center on users and then beers
     % 5 -> center with beer averages and then user biases
     % other -> globally    
-    center_param = 5;
+    center_param = 0;
 
 % ---- END PARAMETERS ---- %
 
@@ -234,7 +234,7 @@ title('Testing Error')
 % text(.35*(xlim(2)-xlim(1))+xlim(1),.6*(ylim(2)-ylim(1))+ylim(1),desc_str);
 
 %% ---- CHANGE PRINTED MSE GRAPH NAME HERE ---- %%
-print -dpng 'figures/Final'
+print -dpng 'figures/non_centered_final'
 
 % record baselines (averages
 [test_error, user_err_avgs, user_error_var] = ...
