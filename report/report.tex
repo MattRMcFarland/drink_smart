@@ -21,6 +21,7 @@
 \usepackage{color}
 \usepackage{booktabs}
 \usepackage[toc,page]{appendix}
+\usepackage{multirow}
 
 \DeclareMathOperator*{\argmin}{arg\,min}
 
@@ -40,11 +41,6 @@ Using a dataset of beer reviews from \textbf{Beer Advocate}, we attempt to predi
 
 We find that \textit{Singular Value Decomposition} can generate predicts 2\% better than the average baseline predictions. \textit{Item-to-Item Collaborative Filtering} produces a 1\% improvement compared to the baseline, conditional on limiting the dataset to users that have made many reviews. \\
 \end{abstract}
-
-% Questions for Matt:
-
-% 1. Does order matter when finding the item residual (mean) and the user residual (mean) for the baseline
-% 2. ^ Yes. Need to normalize for beer mean bias first. Then get user offset of beer means deltas.
 
 \section{Preface}
 To keep our terminology consistent with existing literature in collaborative filtering, we will take \textit{users} to mean reviewers on Beer Advocate and \textit{items} to mean the beers under review. For a user $i$ and an item $j$, let $Y_{ij}$ and $\hat Y_{ij}$ give the actual and predicted rating of that user on that item, respectively.
@@ -84,7 +80,7 @@ To avoid noise and reduce computational complexity, we only include users who ha
 \paragraph{Splitting Testing and Training Data} To partition the dataset into testing and training segments, we randomly separated out a percentage (15\% - 20\%) of all observed ratings and held those points from the training process. Our prediction models trained on the remaining set of reviews. We used the held-out set of testing data points to evaluate the predictive power of the trained model.
 
 \paragraph{Error Measurement}
-We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While training, $S$ consists of the training data set. To calculate testing error, we used $S$ as the set of held-out testing data.
+We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While measuring training error, $S$ consists of the training data set. To calculate testing error, we used $S$ as the set of held-out testing data.
 
 % $$ \mathbf{MAE} = \frac{\sum\limits_{i,j \epsilon S} \mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}{\sum\limits_{i,j \epsilon S}\mathbf{\|S\|} $$
 $$ \mathbf{MSE} = \frac{\sum\limits_{i,j \in S} {\mathbf{|Y_{ij} - \hat{Y}_{ij}|}}^2}{{\mathbf{|S|}}^2} $$
@@ -101,7 +97,7 @@ We use three methods to make predictions:
   \item \textbf{Item-to-Item Collaborative Filtering}: uses a pairwise correlation matrix of items and predicts based on ratings of similar items
 \end{enumerate}
 
-We additionally considered and ultimately dismissed implementing User-to-User Collaborative Filtering. This approach attempts to find similarities between users to make predictions. However, User-to-User Collaborative Filtering has also been known to underperform compared to Item-to-Item Collaborative Filtering.\textsuperscript{\cite{sarwar}} This method also does not scale well with a large number of users because the similarity matrix must be recomputed with the addition of each new user. Given that it's easier for new users to join the dataset than to produce a new beer, it is more responsible to build a prediction engine with user growth in mind.\textsuperscript{\cite{linden}}
+We additionally considered and ultimately dismissed implementing User-to-User Collaborative Filtering. This approach attempts to find similarities between users to make predictions. However, User-to-User Collaborative Filtering has been known to underperform compared to Item-to-Item Collaborative Filtering.\textsuperscript{\cite{sarwar}} This method also does not scale well with a large number of users because the similarity matrix must be recomputed with the addition of each new user. Given that it's easier for new users to join the dataset than to produce a new beer, it is better to build a prediction engine with user growth in mind.\textsuperscript{\cite{linden}}
 
 \section{Baseline Predictors}
 To establish a threshold of success for our algorithms, we first calculate a series of average baselines. The most basic predictor consists of predicting the global average rating $\mu_{global}$. Predicting the user's average rating $\mu_{user}$ and beer's average score $\mu_{item}$ are two other basic predictors.
@@ -140,63 +136,78 @@ To maximize the potential predictive power of this approach, we fit $U$ and $V$ 
 
  $$ R_{ij} = Y_{ij} - Y_{baseline_{ij}} $$
 
- By centering the data on $Y_{baseline}$, we can regularize our predictive error function to avoid overfitting. (Fitting $U$ and $V$ to non-centered data took far longer to train and produced less accurate results. See TODO cite figure in appendix.) To find a $U$ and $V$ matrix that approximates $R$, we minimized the difference between the observed training residuals and the predicted residuals.
+ By centering the data on $Y_{baseline}$, we can regularize our predictive error function to avoid overfitting. (Fitting $U$ and $V$ to non-centered data produced less accurate results. See the results section.) To find a $U$ and $V$ matrix that approximates $R$, we minimized the difference between the observed training residuals and the predicted residuals.
 
 $$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|R_{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
 
-Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. $S$ is a set of observed beer ratings, and $I$ is the indicator of $S$.
+Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. $S$ is the training set of observed beer ratings. \\
 
-$$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) V_j + w_U U_i$$
+\begin{center}
+$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) V_j + w_U U_i $ \hspace{1cm} $ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) U_i + w_V V_j$\\
+\end{center}
 
 % \begin{center}
 %   In compact matrix form, this is $\frac{\partial E}{\partial U} = -2 * I (Y - U V^T) U + w_U U$
 % \end{center}
 
-$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) U_i + w_V V_j$$
+%$$ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) U_i + w_V V_j$$
 
 % \begin{center}
 %   In compact matrix form, this is $\frac{\partial E}{\partial V} = -2 * (I (Y - U V^T))^T V + w_V V$
 % \end{center}
 
 Where $U$ and $V$ were updated with schotastic gradient descent (and where $\lambda$ is the learning rate / step size). While training $U$ and $V$, this update process continued until the error started to increase.
-
 \begin{center}
-$ U_{i+1} = U - \lambda * \frac{\partial E}{\partial U}$ \hspace{2cm} $V_{i+1} = V - \lambda * \frac{\partial E}{\partial V}$
+$ U_{t+1} = U_t - \lambda * \frac{\partial E}{\partial U}$ \hspace{2cm} $V_{t+1} = V_t - \lambda * \frac{\partial E}{\partial V}$
 \end{center}
-
 \paragraph{Prediction} To predict a residual for user $i$ and beer $j$, we take the product of $U_i$ and $V_j^T$. By adding the baseline prediction to the predicted residual, we get the overall predicted score.
-
-$$ \hat{Y}_{ij} = Y_{baseline_{ij}} + \hat{R}_{ij} = Y_{baseline_{ij}} + U_i V_j^T $$
-
+$$ \hat{R}_{ij} = U_i V_j^T $$
+$$ \hat{Y}_{ij} = Y_{baseline_{ij}} + \hat{R}_{ij} $$
 
 \subsection*{Hyper-Parameter Tuning}
-The SVD prediction required four hyperparameters: The learning rate ($\mu$), the regularization weights for $U$ ($w_U$) and $V$ ($w_V$), and $k$ which determines the number of eigenvectors $U$ and $V$ include. In each training run, we selected the $\lambda$ possible without causing divergence (varying from $0.5$ to $.001$). Because cross-validate testing among the remaining three hyper parameters would be too time intensive, we opted to select the regularization weights $w_U = 20.0$ and $w_V = 10.0$; such large values helped prevent overtraining. Having decided on a non-divergent $\mu$ and weights $w_U$ and $w_V$, we then executed a form of cross validation to find the best $k$.
+The SVD prediction model required four hyperparameters: The learning rate ($\lambda$), the regularization weights for $U$ ($w_U$) and $V$ ($w_V$), and $k$ which determines the number of $Y$ eigenvectors included in $U$ and $V$. In each training run, we selected the largest $\lambda$ possible without causing divergence (varying from $0.5$ to $.001$). While determining the best weights and $k$, we trained and tested on a smaller subset of the the full dataset ($7,000$ users and $800$ beers) for time's sake.
+
+\paragraph{Selecting Regularization Weights} We tested a matrix of regularization weights to determine which combination of \textit{light} ($\sim 0.02$) and \textit{heavy} ($\sim 30.0$) weights produced the best testing results. The results are included in Table \ref{tab:weight_table}. We selected the regularization weights $w_U = 20.0$ and $w_V = 10.0$ as the best weight combination, because larger weights produced more accurate predictions by preventing over training. We weighted $U$ more than $V$ to allow the training process to develop slightly more complex profiles for the items instead of the users. 
+
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+\begin{table}[ht!]
+\centering
+\caption{Testing MSE Error for Different $w_U$ and $w_V$}
+\label{tab:weight_table}
+\begin{tabular}{lcccl}
+                                           & \multicolumn{1}{l}{}       & \multicolumn{2}{c}{$w_U$}                                &  \\ \cline{3-4}
+                                           & \multicolumn{1}{c|}{}      & \multicolumn{1}{c|}{light} & \multicolumn{1}{c|}{\textbf{heavy}} &  \\ \cline{2-4}
+\multicolumn{1}{l|}{\multirow{2}{*}{$w_V$}} & \multicolumn{1}{c|}{light} & 0.3485                     & 0.3261                     &  \\ \cline{2-2}
+\multicolumn{1}{l|}{}                      & \multicolumn{1}{c|}{\textbf{heavy}} & 0.3245                     & \textbf{0.3233}                      &  \\ \cline{2-2}
+\end{tabular}
+\end{table}
+
+\paragraph{Selecting k} Having decided on a non-divergent $\lambda$ and weights $w_U$ and $w_V$, we then executed a form of cross validation to find the best $k$. The results are included in Table \ref{tab:k_selection}. The Avg MSE is the averaged MSE of the three validation tests for the given $k$. In the validation test, 20\% of the training data was randomly partitioned into a validation set. SVD trained on the remaining portion of the training set, and validation error was calculated with the found $U$ and $V$ on the validation data. Cross validation results showed that $k = 3$ generated the lowest average MSE. 
 
 \begin{table}[ht!]
 \centering
 \caption{Cross Validation of k Results}
+\label{tab:k_selection}
 \vspace{2mm}
 \begin{tabular}{llllllll}
 \hline
-\textbf{k}              & 1 				& 3          	& 5             & 7             & 10        & 15        & 20 \\
-\textbf{Avg MSE}        & $0.3140$		& $0.3084$   	& $0.3103$      & $0.3110$      & $0.3116$  & $0.3124$  & $0.3148$\\ \hline
+\textbf{k}             &  1 				& \textbf{3}          	& 5             & 7             & 10        & 15        & 20 \\ \hline
+\textbf{Avg MSE}       & $0.3140$		& {$\mathbf{0.3084}$}   	& $0.3103$      & $0.3110$      & $0.3116$  & $0.3124$  & $0.3148$\\ \hline
 \end{tabular}
 \end{table}
 
-The Avg MSE is the averaged MSE of the three validation tests for the given $K$. In the validation test, 20\% of the training data was randomly partitioned into a validation set. SVD trained on the remaining portion of the training set, and validation error was calculated with the found $U$ and $V$ on the validation data. Note: We cross validated on a smaller subet of the dataset ($7,000$ users and $800$ items) because using the full dataset would have been too computationally intensive for such analysis.\\
-
- Cross validation results showed that a small $K = 3$ generated the lowest average MSE. \\
-
 \subsection*{SVD Results}
-Initially, we tried to fit $U$ and $V$ to the raw scores instead of to the residuals (with the found best $k = 3$). Predicting the raw score of the $\hat Y_{ij}$ as the product of $U_i$ and $V_j$ resulted in a testing error of $0.4584$ which was unacceptably higher than the best baseline. \\
+Initially, we tried to fit $U$ and $V$ to the raw scores instead of to the residuals (with the found best $k = 3$). Predicting the raw score $\hat Y_{ij}$ as the product of $U_i$ and $V_j$ resulted in a testing error of $0.4584$ which was unacceptably higher than the best baseline.
 %(See Figure \ref{fig:non_centered_unregularized} in the Appendix).
 
-To improve performance, we altered our training algorithm to fit $U$ and $V$ to the residual matrix $R$, and summed the predicted residual and predicted baseline to get the review prediction. Using the found best $k = 3$, regularization weights $w_U = 20.0$ and $w_K = 10.0$, and learning rate $\mu = .5$, we trained the SVD on the full dataset of review residuals (reserving 15\% of the data as testing data). We were able to realize an MSE of $0.3375$ which represented an improvement of $2.4\%$ over the bias baseline predictor (MSE of $0.3458$).
+To improve performance, we altered our training algorithm to fit $U$ and $V$ to the residual matrix $R$, and summed the predicted residual and predicted baseline to get the review prediction. Using the found best $k = 3$, regularization weights $w_U = 20.0$ and $w_V = 10.0$, and learning rate $\mu = .5$, we trained the SVD on the full dataset of review residuals (reserving 15\% of the data as testing data). We were able to realize an MSE of $0.3375$ which represented an improvement of $2.4\%$ over the bias baseline predictor (MSE of $0.3458$). See Figure \ref{fig:svd_results}.
 
 \begin{figure}[!ht]
 \begin{center}
 \caption{SVD Best Prediction Results}
-    \includegraphics[width=.85\textwidth]{"./figures/final".jpg}
+\label{fig:svd_results}
+    \includegraphics[width=.7\textwidth]{"./figures/final".jpg}
 \end{center}
 \end{figure}
 
@@ -219,7 +230,7 @@ $$
 
 \paragraph{Prediction} Armed with the similarity matrix ${S}$, we can make predictions. For a given user $i$, we wish to predict his rating on an item $j$ that he has not yet rated, given his past ratings. Letting $S$ be a set of items similar to the predicted item $j$ that the user has also rated, We predict $\hat Y_{ij}$, where:
 
-$$ \hat Y_{ij} = \mu_{baseline_{ij}} + \frac{\sum\limits_{s \in S} Y_{is}}{|S|}$$
+$$ \hat Y_{ij} = \mu_{baseline_{ij}} + \frac{\sum\limits_{s \in S} R_{is}}{|S|}$$
 
 We predict our baseline plus an Item-to-Item Collaborative Filtering term.\textsuperscript{\cite{gower}} This term sums the users ratings for items similar to $j$ and divides by the number of similar items that the user has rated (takes an average).
 
@@ -296,7 +307,7 @@ Sarwar, Badrul, George Karypis, Joseph Konstan, and John Reidl. ``Item-based Col
 
 \newpage
 \begin{appendices}
-\section{Dataset Characterization}
+\section*{Dataset Characterization}
 
     \begin{figure}[!ht]
     \begin{center}

@@ -9,7 +9,7 @@ close all; clear all;
     % graph_str = 'figures/7k_users_800_beers_centered';
 
     % test v. train split
-    test_pcent = .15;    
+    test_pcent = .20;    
     
     % take m least common beers (if -1, take whole set)
     m = -1;
@@ -18,23 +18,23 @@ close all; clear all;
     holdout_users = 0;
     
     % training parameters
-    K = 3;
+    K = 10;
     params.max_iterations = 500;
     params.threshold = 5e-4; 
-    params.step_size = 1e-2;
+    params.step_size = 5e-2;
     params.bias_step_size = 1e-5;
     params.batch_size = 100;
     init_lim = 1.5;             % random initialization limit
     
     % U and V regularization rates
-    w.k_U = 20;
-    w.k_V = 10;
+    w.k_U = .02;
+    w.k_V = .02;
     
     % type of training? Improved (and regularized svd) = 1
     svd_mode = 0;
     
     % apply regularization? 1 if yes, 0 if no
-    regularization_param = 0;
+    regularization_param = 1;
     
     % centering? 
     % 0 -> none 
@@ -44,7 +44,7 @@ close all; clear all;
     % 4 -> center on users and then beers
     % 5 -> center with beer averages and then user biases
     % other -> globally    
-    center_param = 0;
+    center_param = 5;
 
 % ---- END PARAMETERS ---- %
 
