@@ -77,7 +77,7 @@ To avoid noise and reduce computational complexity, we only include users who ha
 
 %We derive the $\mu$ terms in our baseline algorithm. Intuitively, $\mathbf{\bar X}$ represents the residual of a rating that is not explained by the item's average (its ``quality'') and the user's rating tendencies.
 
-\paragraph{Splitting Testing and Training Data} To partition the dataset into testing and training segments, we randomly separated out a percentage (15\% - 20\%) of all observed ratings and held those points from the training process. Our prediction models trained on the remaining set of reviews. We used the held-out set of testing data points to evaluate the predictive power of the trained model.
+\paragraph{Splitting Testing and Training Data} To partition the dataset into testing and training segments, we randomly separated out a percentage (15\% - 20\%) of all observed ratings and held those points from the training process. Our prediction models trained on the remaining set of reviews. We compared the predicted score to the held out testing score to evaluate the predictive power of the trained model.
 
 \paragraph{Error Measurement}
 We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While measuring training error, $S$ consists of the training data set. To calculate testing error, we used $S$ as the set of held-out testing data.
@@ -97,12 +97,12 @@ We use three methods to make predictions:
   \item \textbf{Item-to-Item Collaborative Filtering}: uses a pairwise correlation matrix of items and predicts based on ratings of similar items
 \end{enumerate}
 
-We additionally considered and ultimately dismissed implementing User-to-User Collaborative Filtering. This approach attempts to find similarities between users to make predictions. However, User-to-User Collaborative Filtering has been known to underperform compared to Item-to-Item Collaborative Filtering.\textsuperscript{\cite{sarwar}} This method also does not scale well with a large number of users because the similarity matrix must be recomputed with the addition of each new user. Given that it's easier for new users to join the dataset than to produce a new beer, it is better to build a prediction engine with user growth in mind.\textsuperscript{\cite{linden}}
+We additionally considered and ultimately dismissed implementing User-to-User Collaborative Filtering. This approach attempts to find similarities between users to make predictions. User-to-User Collaborative Filtering has been known to underperform compared to Item-to-Item Collaborative Filtering.\textsuperscript{\cite{sarwar}} This method also does not scale well with a large number of users because the similarity matrix must be recomputed with the addition of each new user. Given that it's easier for new users to join the dataset than to produce a new beer, it is better to build a prediction engine with user growth in mind.\textsuperscript{\cite{linden}}
 
 \section{Baseline Predictors}
 To establish a threshold of success for our algorithms, we first calculate a series of average baselines. The most basic predictor consists of predicting the global average rating $\mu_{global}$. Predicting the user's average rating $\mu_{user}$ and beer's average score $\mu_{item}$ are two other basic predictors.
 
-Additionally, we implemented a baseline predictor used by Simon Funk in the Netflix Prize.\textsuperscript{\cite{Funk}} First, we calculate the mean for each item ($\mu_{item}$) for each column $j$. \textit{After} subtracting $\mu_{item}$ (each beer's average) from $Y$, we calculate the mean bias ($\mu_{bias}$) for each user above or below the beer average by averaging across row $i$. We then construct ${\mu}_{baseline_{ij}} = \mu_{bias_i} + \mu_{item_j}$ and use $\mu_{baseline_{ij}}$ as the predictor as $\hat{Y}_{ij}$.
+Additionally, we implemented a baseline predictor used by Simon Funk in the Netflix Prize.\textsuperscript{\cite{Funk}} First, we calculate the mean for each item ($\mu_{item}$) for each column $j$. \textit{After} subtracting $\mu_{item}$ (each beer's average) from $Y$, we calculate the mean bias ($\mu_{bias}$) for each user above or below each beer's average by averaging across row $i$. We then construct ${\mu}_{baseline_{ij}} = \mu_{bias_i} + \mu_{item_j}$ and use $\mu_{baseline_{ij}}$ as the predictor as $\hat{Y}_{ij}$.
 
 %We then subtract the user bias from each row, reducing $Y$ to residuals. We form the predicted rating $\hat{Y}_{baseline_{ij}}$ for user $i$ on item $j$ by calculating:
 %$$\hat{Y}_{baseline_{ij}} = {\mu}_{baseline_{ij}} = \mu_{bias_i} + \mu_{item_j}$$
@@ -140,10 +140,10 @@ To maximize the potential predictive power of this approach, we fit $U$ and $V$ 
 
 $$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|R_{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
 
-Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. $S$ is the training set of observed beer ratings. \\
+Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. Here $S$ is the training set of observed beer ratings. \\
 
 \begin{center}
-$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) V_j + w_U U_i $ \hspace{1cm} $ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R^{ij} - U_i V_j^T) U_i + w_V V_j$\\
+$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (R_{ij} - U_i V_j^T) V_j + w_U U_i $ \hspace{1cm} $ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R_{ij} - U_i V_j^T) U_i + w_V V_j$\\
 \end{center}
 
 % \begin{center}
@@ -165,9 +165,9 @@ $$ \hat{R}_{ij} = U_i V_j^T $$
 $$ \hat{Y}_{ij} = Y_{baseline_{ij}} + \hat{R}_{ij} $$
 
 \subsection*{Hyper-Parameter Tuning}
-The SVD prediction model required four hyperparameters: The learning rate ($\lambda$), the regularization weights for $U$ ($w_U$) and $V$ ($w_V$), and $k$ which determines the number of $Y$ eigenvectors included in $U$ and $V$. In each training run, we selected the largest $\lambda$ possible without causing divergence (varying from $0.5$ to $.001$). While determining the best weights and $k$, we trained and tested on a smaller subset of the the full dataset ($7,000$ users and $800$ beers) for time's sake.
+The SVD prediction model required four hyperparameters: The learning rate ($\lambda$), the regularization weights for $U$ ($w_U$) and $V$ ($w_V$), and $k$ which determines the number of $Y$ eigenvectors included in $U$ and $V$. In each training run, we selected the largest $\lambda$ possible without causing divergence (varying from $0.5$ to $0.001$). While determining the best weights and $k$, we trained and validated on a smaller subset of the the full dataset ($7,000$ users and $800$ beers) for time's sake.
 
-\paragraph{Selecting Regularization Weights} We tested a matrix of regularization weights to determine which combination of \textit{light} ($\sim 0.02$) and \textit{heavy} ($\sim 30.0$) weights produced the best testing results. The results are included in Table \ref{tab:weight_table}. We selected the regularization weights $w_U = 20.0$ and $w_V = 10.0$ as the best weight combination, because larger weights produced more accurate predictions by preventing over training. We weighted $U$ more than $V$ to allow the training process to develop slightly more complex profiles for the items instead of the users. 
+\paragraph{Selecting Regularization Weights} We tested a matrix of regularization weights to determine which combination of \textit{light} ($\sim 0.02$) and \textit{heavy} ($\sim 30.0$) weights produced the best validation results. The results are included in Table \ref{tab:weight_table}. We selected the regularization weights $w_U = 20.0$ and $w_V = 10.0$ as the optimal weight combination, because larger weights produced more accurate predictions by preventing over training. We weighted $U$ more than $V$ to allow the training process to develop slightly more complex profiles for the items instead of the users. 
 
 % Please add the following required packages to your document preamble:
 % \usepackage{multirow}
@@ -218,8 +218,7 @@ To improve performance, we altered our training algorithm to fit $U$ and $V$ to 
 
 % If users rate beers $i$ and $j$ consistently well or poorly, the similarity increases. If users rate one postively and the other negatively, the similarity decreases.
 
-Our prediction step requires knowing which items should be considered ``similar'' enough to each other to use as a basis for a prediction. We must discretize ${C}$ such that correlation scores above a certain threshold $s^*$ are considered ``similar''.\textsuperscript{\cite{sarwar}} By applying this threshold to all entries in ${C}$, we generate a $d \times d$ matrix ${S}$, where:
-
+Our prediction step requires knowing which items should be considered ``similar'' enough to each other to use as a basis for a prediction. We must discretize ${C}$ such that correlation scores above a certain threshold $s^*$ are considered ``similar.''\textsuperscript{\cite{sarwar}} By applying this threshold to all entries in ${C}$, we generate a $d \times d$ matrix ${S}$, where:
 $$
 \mathbf{S}_{ij} =
 \begin{cases}
@@ -232,7 +231,7 @@ $$
 
 $$ \hat Y_{ij} = \mu_{baseline_{ij}} + \frac{\sum\limits_{s \in S} R_{is}}{|S|}$$
 
-We predict our baseline plus an Item-to-Item Collaborative Filtering term.\textsuperscript{\cite{gower}} This term sums the users ratings for items similar to $j$ and divides by the number of similar items that the user has rated (takes an average).
+We predict our baseline plus an Item-to-Item Collaborative Filtering term.\textsuperscript{\cite{gower}} This term sums the users rating residuals for items similar to $j$ and divides by the number of similar items that the user has rated (takes an average).
 
 \subsection*{Hyper-Parameter Tuning}
 Item-to-Item Collaborative Filtering requires setting $s^*$ to a threshold to determine whether two items are similar or not. In Figure \ref{fig:similarity_tuning}, we calculate the prediction error for various similarity thresholds. We observe that this algorithm has the lowest prediction error where $s^* = 0$. As the $s^*$ increases, we have fewer similiar items from which to generate the collaborative filtering term, leading to greater variation in the ``average of similar items''. Even though non-correlated items are viewed as ``similar'' when $s^* = 0$, our results improve on the best baseline by removing all \textit{dissimilar} items from the comparison.
@@ -246,7 +245,7 @@ Item-to-Item Collaborative Filtering requires setting $s^*$ to a threshold to de
 
 \subsection*{Item-to-Item Collaborative Filtering Results}
 
-Given the dependency of Item-to-Item Collaborative Filtering on a user's ratings of similar items, we run the algorithm against two datasets. The first dataset is consistent with our approach in SVD, and considers items with at least 50 ratings and users that have given at least 5 ratings. Under these conditions, we cannot with any regularity beat the baseline.
+Given the dependency of Item-to-Item Collaborative Filtering on a user's ratings of similar items, we run the algorithm against two datasets. The first dataset is consistent with our approach in SVD, and considers items with at least 50 ratings and users that have given at least 5 ratings. Under these conditions, we could not with any regularity beat the baseline.
 
 We restrict the second dataset to users that have made at least 500 ratings (with the same item requirement of 50 ratings). With this restriction in place, we find a modest 1\% improvement compared to our baseline.
 
