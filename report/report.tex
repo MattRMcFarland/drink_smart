@@ -80,10 +80,10 @@ To avoid noise and reduce computational complexity, we only include users who ha
 \paragraph{Splitting Testing and Training Data} To partition the dataset into testing and training segments, we randomly separated out a percentage (15\% - 20\%) of all observed ratings and held those points from the training process. Our prediction models trained on the remaining set of reviews. We compared the predicted score to the held out testing score to evaluate the predictive power of the trained model.
 
 \paragraph{Error Measurement}
-We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While measuring training error, $S$ consists of the training data set. To calculate testing error, we used $S$ as the set of held-out testing data.
+We used the Mean Squared Error (MSE) measurement to calculate the fit of our predictive model. While measuring training error, $D$ consists of the training data set. To calculate testing error, we used $D$ as the set of held-out testing data.
 
 % $$ \mathbf{MAE} = \frac{\sum\limits_{i,j \epsilon S} \mathbf{\|Y_{ij} - \hat{Y}_{iy}\|}}{\sum\limits_{i,j \epsilon S}\mathbf{\|S\|} $$
-$$ {MSE} = \frac{\sum\limits_{i,j \in S} {{|Y_{ij} - \hat{Y}_{ij}|}}^2}{{{|S|}}^2} $$
+$$ {MSE} = \frac{\sum\limits_{i,j \in D} {{|Y_{ij} - \hat{Y}_{ij}|}}^2}{{{|S|}}^2} $$
 
 \paragraph{Tools}
 We implemented the data pre-processing and transformation of review list into a user-item interaction matrix with the Pandas library in Python. We also executed the Item-to-Item Collaborative Filtering analysis in Python. We conducted the Single Value Decomposition analysis in Matlab.
@@ -136,14 +136,14 @@ To maximize the potential predictive power of this approach, we fit $U$ and $V$ 
 
  $$ R_{ij} = Y_{ij} - Y_{baseline_{ij}} $$
 
- By centering the data on $Y_{baseline}$, we can regularize our predictive error function to avoid overfitting. The regularization penalizes complexity by adding the L2 norm of $U$ and $V$ multiplied by some regularization constant ($w_U$ and $w_V$ respectively) to the residual error term. (Fitting $U$ and $V$ to non-centered data produced less accurate results. See the results section.) To find a $U$ and $V$ matrix that approximates $R$, we minimized the difference between the observed training residuals and the predicted residuals plus regularization terms.
+ By centering the data on $Y_{baseline}$, we can regularize our predictive error function to avoid overfitting. The regularization penalizes complexity by adding the L2 norm of $U$ and $V$ multiplied by some regularization constant ($w_U$ and $w_V$ respectively) to the residual error term. To find a $U$ and $V$ matrix that approximates $R$, we minimized the difference between the observed training residuals and the predicted residuals plus regularization terms.
 
 $$ [\hat{U}, \hat{V}] \leftarrow \argmin\limits_{U,V}\sum\limits_{i,j \epsilon S} {\|R_{ij} - U_i V_j^T\|}^2 + w_U\|U\|^2 + w_V\|V\|^2$$
 
-Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. Here $S$ is the training set of observed beer ratings. \\
+Because $Y$ includes missing data, we cannot solve for the closed form solution and must train $U$ and $V$ with a gradient descent minimization of the prediction difference function. Here $T$ is the training set of observed beer ratings. \\
 
 \begin{center}
-$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon S} (R_{ij} - U_i V_j^T) V_j + w_U U_i $ \hspace{1cm} $ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon S} (R_{ij} - U_i V_j^T) U_i + w_V V_j$\\
+$ \frac{\partial E}{\partial U_i} = -2 * \sum\limits_{i,j \epsilon T} (R_{ij} - U_i V_j^T) V_j + w_U U_i $ \hspace{1cm} $ \frac{\partial E}{\partial V_j} = -2 * \sum\limits_{i,j \epsilon T} (R_{ij} - U_i V_j^T) U_i + w_V V_j$\\
 \end{center}
 
 % \begin{center}
